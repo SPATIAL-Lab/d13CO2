@@ -11,7 +11,7 @@ library(R2jags)
 ############################################################################################
 # Load proxy data
 prox.in <- read.csv(file = "data/d13Ccarb.csv")
-names(prox.in) <- c("site", "age", "d13C", "d13C.sd")
+names(prox.in) <- c("site", "age", "d13C", "d13C.sd", "archive")
 
 # Age and site index proxy data
 prox.in <- transform(prox.in,ai=as.numeric(factor(round(age*-1))))
@@ -23,12 +23,24 @@ ages.prox <- sort(unique(prox.in$age), decreasing = TRUE)
 dt <- abs(diff(ages.prox, lag=1))
 
 # Clean and prepare proxy data 
-clean.d13Cc <- prox.in[complete.cases(prox.in$d13C), ]
-ai.d13Cc <- sort(c(as.integer(clean.d13Cc$ai)), decreasing = FALSE)    
-n.steps <- as.numeric(length((ai.d13Cc)))
-si.d13Cc <- clean.d13Cc$site.index
-d13Cc.data <- clean.d13Cc$d13C
-d13Cc.sd <- clean.d13Cc$d13C.sd
+clean.d13C <- prox.in[complete.cases(prox.in$d13C), ]
+
+# planktic foraminifera
+clean.d13Cpf <- clean.d13C[clean.d13C$archive == "pf",]
+ai.d13Cpf <- sort(c(as.integer(clean.d13Cpf$ai)), decreasing = FALSE)    
+si.d13Cpf <- clean.d13Cpf$site.index
+d13Cpf.data <- clean.d13Cpf$d13C
+d13Cpf.sd <- clean.d13Cpf$d13C.sd
+
+# benthic foraminifera 
+clean.d13Cbf <- clean.d13C[clean.d13C$archive == "bf",]
+ai.d13Cbf <- sort(c(as.integer(clean.d13Cbf$ai)), decreasing = FALSE)    
+si.d13Cbf <- clean.d13Cbf$site.index
+d13Cbf.data <- clean.d13Cbf$d13C
+d13Cbf.sd <- clean.d13Cbf$d13C.sd
+
+ai.all <- sort((c(ai.d13Cpf, ai.d13Cbf)) , decreasing = FALSE)
+n.steps <- as.numeric(length((ai.all)))
 ############################################################################################
 
 
@@ -67,13 +79,18 @@ d13CO2.sd <- 2
 
 # Select data to pass to jags 
 ############################################################################################
-data.pass = list("d13Cc.data" = d13Cc.data,   
-                 "d13Cc.sd" = d13Cc.sd,   
+data.pass = list("d13Cpf.data" = d13Cpf.data,   
+                 "d13Cpf.sd" = d13Cpf.sd,  
+                 "ai.d13Cpf" = ai.d13Cpf,
+                 "si.d13Cpf" = si.d13Cpf,
+                 "d13Cbf.data" = d13Cbf.data,   
+                 "d13Cbf.sd" = d13Cbf.sd,
+                 "ai.d13Cbf" = ai.d13Cbf,
+                 "si.d13Cbf" = si.d13Cbf,
+                 "ai.all" = ai.all,
                  "n.steps" = n.steps,
                  "dt" = dt,
                  "n.sites" = n.sites,
-                 "ai.d13Cc" = ai.d13Cc,
-                 "si.d13Cc" = si.d13Cc,
                  "GMST.m" = GMST.m,
                  "GMST.sd" = GMST.sd,
                  "toff.m" = toff.m,
@@ -85,7 +102,7 @@ data.pass = list("d13Cc.data" = d13Cc.data,
 
 # Parameters to save as output 
 ############################################################################################
-parms = c("tempC", "d13CO2", "d13Cc")
+parms = c("tempC", "d13CO2", "d13Cpf", "d13Cbf")
 ############################################################################################
 
 

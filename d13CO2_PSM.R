@@ -3,19 +3,47 @@ model {
 # Likelihood block 
 ####################################################################################################
   
-  for (i in 1:length(d13Cc.data)){
-    d13Cc.data[i] ~ dnorm(d13Cc[ai.d13Cc[i], si.d13Cc[i]], d13Cc.p[ai.d13Cc[i]])
-    d13Cc.p[i] = 1/d13Cc.sd[i]^2
+  # Benthic forams
+  for (i in 1:length(d13Cbf.data)){
+    d13Cbf.data[i] ~ dnorm(d13Cbf[ai.d13Cbf[i], si.d13Cbf[i]], d13Cbf.p[i])
+    d13Cbf.p[i] = 1/d13Cbf.sd[i]^2
   }
+
+  # Planktic forams
+  for (i in 1:length(d13Cpf.data)){
+    d13Cpf.data[i] ~ dnorm(d13Cpf[ai.d13Cpf[i], si.d13Cpf[i]], d13Cpf.p[i])
+    d13Cpf.p[i] = 1/d13Cpf.sd[i]^2
+  }
+  
+  
+# Constants
+####################################################################################################  
+  # Equation 8 of Tipple et al. (2010)
+  eps.dic_cc <- -1   
+  
+  # Benthic disequilibrium effects; totals to 2.8 (mean) from Tipple et al. (2010)
+  asd ~ dnorm(1, 1/0.2^2)T(0,)  # air sea disequilibrium 
+  bpump ~ dnorm(1.2, 1/0.4^2)T(0,) # biological pump
+  remin ~ dnorm(0.6, 1/0.3^2)T(0,) # remineralization and oxidation 
+  A = asd + bpump + remin
   
   
 # Proxy system model 
 ####################################################################################################
   for (i in 1:n.steps){
     for (j in 1:n.sites){
-      # Calculate carbonate d13C from env parm d13CO2; rearranged eqn of Romanek et al. (1992)
-      # UPDATE THIS RELATIONSHIP
-      d13Cc[i,j] <- ((11.98 - 0.12*tempC[i,j])/1000 + 1)*(d13CO2[i] + 1000) - 1000 
+      # Calculate various carbonate archive d13C values from d13CO2 and temperature
+      
+      # Equations 4, 5, and 3 (respectively) of Tipple et al. (2010)
+      eps.bicarb_co2[i,j] <- -0.1141*tempC[i,j] + 10.78                   
+      eps.ci_co2[i,j] <- 0.0049*tempC[i,j] - 1.31
+      eps.dic_co2[i,j] <- (0.91*eps.bicarb_co2[i,j]) + (0.08*eps.ci_co2[i,j])
+      
+      # Benthic forams; equation 7 of Tipple et al. (2010)
+      d13Cbf[i,j] <- ((d13CO2[i]+1000)*((eps.dic_co2[i,j]/1000)+1)) - eps.dic_cc - A - 1000
+      
+      # Planktic forams; equation 9 of Tipple et al. (2010)
+      d13Cpf[i,j] <- ((d13CO2[i]+1000)*((eps.dic_co2[i,j]/1000)+1)) - eps.dic_cc - 1000
     }
   }
   

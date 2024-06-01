@@ -42,26 +42,26 @@ GMST.m <- GMST.m[["y"]]
 GMST.sd <- GMST.sd[["y"]]
 
 # Matrix of spatio-temporally dependent temperature offsets from GMST
-t.off.m.in <- as.data.frame(read.csv(file = "data/TempOffsetMean.csv")) # matrix [i,j] of mean values for temperature offset, for ages.prox (i) and sites (j) 
-t.off.m = c(1:(length(ages.prox)*(length(t.off.m.in[,1])-1)))
-dim(t.off.m) = c((length(ages.prox)), (length(t.off.m.in[,1])-1))
-for (i in 2:length(t.off.m.in)){
-  t.off.m[,i-1] <- approx(x = t.off.m.in$age, y = as.numeric(unlist(t.off.m.in[i])), xout=ages.prox, method="linear")[["y"]]
+INPUTtoff.m <- as.data.frame(read.csv(file = "data/TempOffsetMean.csv")) # matrix [i,j] of mean values for temperature offset, for ages.prox (i) and sites (j) 
+toff.m = c(1:(length(ages.prox)*(length(INPUTtoff.m[,1])-1)))
+dim(toff.m) = c((length(ages.prox)), (length(INPUTtoff.m[,1])-1))
+for (i in 2:length(INPUTtoff.m)){
+  toff.m[,i-1] <- approx(x = INPUTtoff.m$age, y = as.numeric(unlist(INPUTtoff.m[i])), xout=ages.prox, method="linear")[["y"]]
 }
 
-t.off.sd.in <- as.data.frame(read.csv(file = "data/TempOffsetSD.csv"))  # matrix [i,j] of sds for temperature offset, for ages.prox (i) and sites (j)
-t.off.sd = c(1:(length(ages.prox)*(length(t.off.sd.in[,1])-1)))
-dim(t.off.sd) = c((length(ages.prox)), (length(t.off.sd.in[,1])-1))
-for (i in 2:length(t.off.sd.in)){
-  t.off.sd[,i-1] <- approx(x = t.off.sd.in$age, y = as.numeric(unlist(t.off.sd.in[i])), xout=ages.prox, method="linear")[["y"]]
+INPUTtoff.sd <- as.data.frame(read.csv(file = "data/TempOffsetSD.csv"))  # matrix [i,j] of sds for temperature offset, for ages.prox (i) and sites (j)
+toff.sd = c(1:(length(ages.prox)*(length(INPUTtoff.sd[,1])-1)))
+dim(toff.sd) = c((length(ages.prox)), (length(INPUTtoff.sd[,1])-1))
+for (i in 2:length(INPUTtoff.sd)){
+  toff.sd[,i-1] <- approx(x = INPUTtoff.sd$age, y = as.numeric(unlist(INPUTtoff.sd[i])), xout=ages.prox, method="linear")[["y"]]
 }
 ############################################################################################
 
 
 # Environmental prior (d13C of atm CO2) 
 ############################################################################################
-d13C.co2.m <- -8
-d13C.co2.sd <- 2
+d13CO2.m <- -8
+d13CO2.sd <- 2
 ############################################################################################
 
 
@@ -76,16 +76,16 @@ data.pass = list("d13Cc.data" = d13Cc.data,
                  "si.d13Cc" = si.d13Cc,
                  "GMST.m" = GMST.m,
                  "GMST.sd" = GMST.sd,
-                 "t.off.m" = t.off.m,
-                 "t.off.sd" = t.off.sd,
-                 "d13C.co2.m" = d13C.co2.m,
-                 "d13C.co2.sd" = d13C.co2.sd) 
+                 "toff.m" = toff.m,
+                 "toff.sd" = toff.sd,
+                 "d13CO2.m" = d13CO2.m,
+                 "d13CO2.sd" = d13CO2.sd) 
 ############################################################################################
 
 
 # Parameters to save as output 
 ############################################################################################
-parms = c("tempC", "d13C.co2", "d13Cc")
+parms = c("tempC", "d13CO2", "d13Cc")
 ############################################################################################
 
 

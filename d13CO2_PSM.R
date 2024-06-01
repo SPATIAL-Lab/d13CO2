@@ -15,6 +15,12 @@ model {
     d13Cpf.p[i] = 1/d13Cpf.sd[i]^2
   }
   
+  # Bulk carbonate
+  for (i in 1:length(d13Cbulk.data)){
+    d13Cbulk.data[i] ~ dnorm(d13Cbulk[ai.d13Cbulk[i], si.d13Cbulk[i]], d13Cbulk.p[i])
+    d13Cbulk.p[i] = 1/d13Cbulk.sd[i]^2
+  }
+  
   
 # Constants
 ####################################################################################################  
@@ -26,6 +32,12 @@ model {
   bpump ~ dnorm(1.2, 1/0.4^2)T(0,) # biological pump
   remin ~ dnorm(0.6, 1/0.3^2)T(0,) # remineralization and oxidation 
   A = asd + bpump + remin
+  
+  # Bulk carbonate uncertainty terms from Barral et al. (2017)
+  coeff1 ~ dnorm(0.0144, 1/0.01^2)
+  coeff2 ~ dnorm(0.107, 1/0.002^2)
+  eps.int ~ dnorm(10.53, 1/0.05^2)
+  f_co2 ~ dnorm(0.12, 1/0.04^2)T(0.05,0.20)
   
   
 # Proxy system model 
@@ -44,6 +56,10 @@ model {
       
       # Planktic forams; equation 9 of Tipple et al. (2010)
       d13Cpf[i,j] <- ((d13CO2[i]+1000)*((eps.dic_co2[i,j]/1000)+1)) - eps.dic_cc - 1000
+      
+      # Bulk carbonate; equation 1 of Barral et al. (2017)
+      eps.dic_co2_bulk[i,j] <- coeff1*tempC[i,j]*f_co2 - coeff2*tempC[i,j] + eps.int
+      d13Cbulk[i,j] <- d13CO2[i] + eps.dic_co2_bulk[i,j]
     }
   }
   
@@ -81,9 +97,5 @@ model {
     }
   }
 }
-
-
-
-
 
 

@@ -45,8 +45,15 @@ si.d13Cbf <- clean.d13Cbf$site.index
 d13Cbf.data <- clean.d13Cbf$d13C
 d13Cbf.sd <- clean.d13Cbf$d13C.sd
 
+# bulk carbonate 
+clean.d13Cbulk <- clean.d13C[clean.d13C$archive == "bulk",]
+ai.d13Cbulk <- sort(c(as.integer(clean.d13Cbulk$ai)), decreasing = FALSE)    
+si.d13Cbulk <- clean.d13Cbulk$site.index
+d13Cbulk.data <- clean.d13Cbulk$d13C
+d13Cbulk.sd <- clean.d13Cbulk$d13C.sd
+
 # parameters for all proxies
-ai.all <- sort((c(ai.d13Cpf, ai.d13Cbf)) , decreasing = FALSE)
+ai.all <- sort((c(ai.d13Cpf, ai.d13Cbf, ai.d13Cbulk)) , decreasing = FALSE)
 n.steps <- as.numeric(length((ai.all)))
 ############################################################################################
 
@@ -94,6 +101,10 @@ data.pass = list("d13Cpf.data" = d13Cpf.data,
                  "d13Cbf.sd" = d13Cbf.sd,
                  "ai.d13Cbf" = ai.d13Cbf,
                  "si.d13Cbf" = si.d13Cbf,
+                 "d13Cbulk.data" = d13Cbulk.data,   
+                 "d13Cbulk.sd" = d13Cbulk.sd,  
+                 "ai.d13Cbulk" = ai.d13Cbulk,
+                 "si.d13Cbulk" = si.d13Cbulk,
                  "ai.all" = ai.all,
                  "n.steps" = n.steps,
                  "dt" = dt,

@@ -16,7 +16,7 @@ names(prox.in) <- c("site", "age", "d13C", "d13C.sd", "archive")
 # Age and site index proxy data
 prox.in <- transform(prox.in,ai=as.numeric(factor(round(age*-1))))
 prox.in <- prox.in[order(prox.in$age, decreasing = TRUE),]
-prox.in <- transform(prox.in,site.index=as.numeric(factor(site)))
+prox.in <- transform(prox.in,site.index=as.numeric(factor(site, ordered = is.ordered(site))))
 site.index <- c(prox.in$site.index)
 n.sites <- as.numeric(length(unique(site.index)))
 ages.prox <- sort(unique(prox.in$age), decreasing = TRUE)
@@ -41,6 +41,11 @@ d13Cbf.sd <- clean.d13Cbf$d13C.sd
 
 ai.all <- sort((c(ai.d13Cpf, ai.d13Cbf)) , decreasing = FALSE)
 n.steps <- as.numeric(length((ai.all)))
+
+sites <- data.frame((sort(unique(prox.in$site), decreasing = FALSE)),seq(1:length(sort(unique(prox.in$site), decreasing = FALSE))))
+names(sites) <- c("site", "site.index")
+print(sites)
+print("Make sure the site indexes in the temp offset .csv files are ordered as they are here! (Numerical increasing)")
 ############################################################################################
 
 
@@ -102,7 +107,7 @@ data.pass = list("d13Cpf.data" = d13Cpf.data,
 
 # Parameters to save as output 
 ############################################################################################
-parms = c("tempC", "d13CO2", "d13Cpf", "d13Cbf")
+parms = c("tempC", "d13CO2", "d13Cpf", "d13Cbf", "GMST", "toff")
 ############################################################################################
 
 

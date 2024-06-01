@@ -25,7 +25,7 @@ model {
   asd ~ dnorm(1, 1/0.2^2)T(0,)  # air sea disequilibrium 
   bpump ~ dnorm(1.2, 1/0.4^2)T(0,) # biological pump
   remin ~ dnorm(0.6, 1/0.3^2)T(0,) # remineralization and oxidation 
-  A = asd + bpump + remin
+  A = 2.8 # asd + bpump + remin
   
   
 # Proxy system model 
@@ -54,13 +54,15 @@ model {
   d13CO2[1] ~ dnorm(d13CO2.m, 1/d13CO2.sd^2)T(-10,-6)    
   d13CO2.phi ~ dbeta(5,2) 
   d13CO2.eps[1] = 0 
-  d13CO2.tau ~ dgamma(1e3, 1e-3)
+  d13CO2.tau ~ dgamma(100, 10)
+  
+  # Global mean surface temperature 
+  GMST[1] ~ dnorm(GMST.m[1], 1/GMST.sd[1]^2)T(GMST.m[1]-GMST.sd[1]*2,GMST.m[1]+GMST.sd[1]*2) 
   
   # Temp in C
   for (j in 1:n.sites){
     toff[1,j] ~ dnorm(toff.m[1,j], toff.sd[1,j])
-    GMST[1,j] ~ dnorm(GMST.m[1], 1/GMST.sd[1]^2) 
-    tempC[1,j] = GMST[1,j] + toff[1,j]
+    tempC[1,j] = GMST[1] + toff[1,j]
   }
   
   for (i in 2:n.steps){
@@ -69,11 +71,13 @@ model {
     d13CO2.eps[i] ~ dnorm(d13CO2.eps[i-1]*(d13CO2.phi^dt[i-1]), d13CO2.pc[i])T(-2, 2)
     d13CO2[i] <- d13CO2[1] + d13CO2.eps[i]
     
+    # Global mean surface temperature 
+    GMST[i] ~ dnorm(GMST.m[i], 1/GMST.sd[i]^2)T(GMST.m[i]-GMST.sd[i]*2,GMST.m[i]+GMST.sd[i]*2)  
+    
     for (j in 1:n.sites){
       # Temp in C
       toff[i,j] ~ dnorm(toff.m[i,j], toff.sd[i,j])
-      GMST[i,j] ~ dnorm(GMST.m[i], 1/GMST.sd[i]^2) 
-      tempC[i,j] = GMST[i,j] + toff[i,j]
+      tempC[i,j] = GMST[i] + toff[i,j]
     }
   }
 }

@@ -22,6 +22,12 @@ n.sites <- as.numeric(length(unique(site.index)))
 ages.prox <- sort(unique(prox.in$age), decreasing = TRUE)
 dt <- abs(diff(ages.prox, lag=1))
 
+# List the input sites and their associated site index
+sites <- data.frame((sort(unique(prox.in$site), decreasing = FALSE)),seq(1:length(sort(unique(prox.in$site), decreasing = FALSE))))
+names(sites) <- c("site", "site.index")
+print(sites)
+print("Make sure the site indexes in the temp offset .csv files are ordered as they are here! (Numerical increasing)")
+
 # Clean and prepare proxy data 
 clean.d13C <- prox.in[complete.cases(prox.in$d13C), ]
 
@@ -39,13 +45,9 @@ si.d13Cbf <- clean.d13Cbf$site.index
 d13Cbf.data <- clean.d13Cbf$d13C
 d13Cbf.sd <- clean.d13Cbf$d13C.sd
 
+# parameters for all proxies
 ai.all <- sort((c(ai.d13Cpf, ai.d13Cbf)) , decreasing = FALSE)
 n.steps <- as.numeric(length((ai.all)))
-
-sites <- data.frame((sort(unique(prox.in$site), decreasing = FALSE)),seq(1:length(sort(unique(prox.in$site), decreasing = FALSE))))
-names(sites) <- c("site", "site.index")
-print(sites)
-print("Make sure the site indexes in the temp offset .csv files are ordered as they are here! (Numerical increasing)")
 ############################################################################################
 
 
@@ -77,7 +79,7 @@ for (i in 2:length(INPUTtoff.sd)){
 
 # Environmental prior (d13C of atm CO2) 
 ############################################################################################
-d13CO2.m <- -8
+d13CO2.m <- -6
 d13CO2.sd <- 2
 ############################################################################################
 

@@ -51,13 +51,13 @@ model {
 # Time evolution model  
 ####################################################################################################
   # d13C of atmospheric CO2
-  d13CO2[1] ~ dnorm(d13CO2.m, 1/d13CO2.sd^2)T(-10,-6)    
+  d13CO2[1] ~ dnorm(d13CO2.m, 1/d13CO2.sd^2)   
   d13CO2.phi ~ dbeta(5,2) 
   d13CO2.eps[1] = 0 
   d13CO2.tau ~ dgamma(100, 10)
   
   # Global mean surface temperature 
-  GMST[1] ~ dnorm(GMST.m[1], 1/GMST.sd[1]^2)T(GMST.m[1]-GMST.sd[1]*2,GMST.m[1]+GMST.sd[1]*2) 
+  GMST[1] ~ dnorm(GMST.m[1], 1/GMST.sd[1]^2) 
   
   # Temp in C
   for (j in 1:n.sites){
@@ -68,11 +68,11 @@ model {
   for (i in 2:n.steps){
     # d13C of atmospheric CO2
     d13CO2.pc[i] <- d13CO2.tau*((1-d13CO2.phi^2)/(1-d13CO2.phi^(2*dt[i-1])))
-    d13CO2.eps[i] ~ dnorm(d13CO2.eps[i-1]*(d13CO2.phi^dt[i-1]), d13CO2.pc[i])T(-2, 2)
+    d13CO2.eps[i] ~ dnorm(d13CO2.eps[i-1]*(d13CO2.phi^dt[i-1]), d13CO2.pc[i])
     d13CO2[i] <- d13CO2[1] + d13CO2.eps[i]
     
     # Global mean surface temperature 
-    GMST[i] ~ dnorm(GMST.m[i], 1/GMST.sd[i]^2)T(GMST.m[i]-GMST.sd[i]*2,GMST.m[i]+GMST.sd[i]*2)  
+    GMST[i] ~ dnorm(GMST.m[i], 1/GMST.sd[i]^2) 
     
     for (j in 1:n.sites){
       # Temp in C

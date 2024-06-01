@@ -25,7 +25,7 @@ model {
   asd ~ dnorm(1, 1/0.2^2)T(0,)  # air sea disequilibrium 
   bpump ~ dnorm(1.2, 1/0.4^2)T(0,) # biological pump
   remin ~ dnorm(0.6, 1/0.3^2)T(0,) # remineralization and oxidation 
-  A = 2.8 # asd + bpump + remin
+  A = asd + bpump + remin
   
   
 # Proxy system model 

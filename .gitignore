@@ -9,6 +9,12 @@
 # User-specific files
 .Ruserdata
 .DS_Store
+/working/
+/saved_env/
+/PhanData/
+mcmcout_Li.RData
+mcmcout_PhanDA_normal.RData
+
 
 # Example code in package build process
 *-Ex.R

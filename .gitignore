@@ -11,9 +11,7 @@
 .DS_Store
 /working/
 /saved_env/
-/PhanData/
-mcmcout_Li.RData
-mcmcout_PhanDA_normal.RData
+/Phan/PhanData/High_Resolution_Climate_Simulation_Dataset_540_Myr.nc
 
 
 # Example code in package build process

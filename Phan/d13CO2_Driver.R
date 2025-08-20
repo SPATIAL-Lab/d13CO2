@@ -1,6 +1,6 @@
 
 
-# Driver script for PSM used to reconstruct d13C of atmospheric CO2 
+# Driver script for PSM used to reconstruct d13C of Phanerozoic atmospheric CO2 
 # Dustin T. Harper
 
 
@@ -34,17 +34,28 @@ toff_sd_uniform <- 2
 toff_sd_uniform_bot <- 1 
 
 
-# ----- Alteration -----
-# alteration of archive d13C from 'pristine' value (per mille), standard deviation w/ fixed mean = 0 
+# non-secular bias of archival d13C from high-fidelity (true) value (per mille), standard deviation w/ fixed mean = 0 
 
 # Benthic forams
-bf.alteration <- 0.5
+bf.nsb.m <- 0
+bf.nsb.sd <- 0.5
 
-# Bulk carbonate
-bulk.alteration <- 0.5
+# Bulk carbonate - open ocean
+bulk.nsb.m <- 0
+bulk.nsb.sd <- 0.5
 
-# Brachiopods
-brach.alteration <- 0.5
+# micrite - open ocean
+micrite.nsb.m <- 0
+micrite.nsb.sd <- 0.25
+
+# Bulk carbonate - semi-restricted
+bulk_sr.nsb.m <- 1
+bulk_sr.nsb.sd <- 1
+
+# Bulk carbonate - marginal sea
+bulk_marg.nsb.m <- 0.5
+bulk_marg.nsb.sd <- 1
+
 ############################################################################################
 
 
@@ -52,9 +63,9 @@ brach.alteration <- 0.5
 ############################################################################################
 
 # load proxy data
-prox.in <- as.data.frame(read.csv(file = "PhanData/PhanCompWithTemp.csv"))
-prox.in <- cbind(prox.in[,2:10], prox.in[,12:18], rep(x = toff_sd_uniform, times = nrow(prox.in)))
-names(prox.in) <- c("age", "d13C", "source", "site", "lat", "lon", "material", 
+prox.in <- as.data.frame(read.csv(file = "Phan/PhanData/PhanCompWithTemp.csv"))
+prox.in <- cbind(prox.in[,3:18], rep(x = toff_sd_uniform, times = nrow(prox.in)))
+names(prox.in) <- c("age", "d13C", "source", "site", "lat", "lon", "category", 
                     "paleolon","paleolat", "MAT", "GMST_Li22", "GMST_PhanDA", "GMST_PhanDA_hi",
                     "GMST_PhanDA_lo", "temp_offset", "temp_offset_PhanDA", "temp_offset_sd")
 
@@ -72,7 +83,7 @@ names(age.indices) <- c("ai", "age")
 
 dt <- abs(diff(unique(ages), lag=1))
 n.steps <- as.numeric(length(dt)+1)
-age.max.spinup <- age.max + step.int*n.steps 
+age.max.spinup <- age.max + step.int*n.spinup 
 
 
 # calculate symmetric uncertainty (GMST_PhanDA_sd)
@@ -124,9 +135,11 @@ rownames(flattened) <- NULL
 
 # clean and prepare proxy data 
 clean.d13C <- prox.in[complete.cases(prox.in$d13C), ]
-clean.d13Cbf <- clean.d13C[clean.d13C$material == "bf",]
-clean.d13Cbulk <- clean.d13C[clean.d13C$material == "bulk",]
-clean.d13Cbrach <- clean.d13C[clean.d13C$material == "brach",]
+clean.d13Cbf <- clean.d13C[clean.d13C$category == "bf",]
+clean.d13Cmicrite <- clean.d13C[clean.d13C$category == "micrite open ocean",]
+clean.d13Cbulk <- clean.d13C[clean.d13C$category %in% c("bulk", "bulk open water", "bulk open ocean"), ]
+clean.d13Cbulk_sr <- clean.d13C[clean.d13C$category == "bulk semi restricted",]
+clean.d13Cbulk_marg <- clean.d13C[clean.d13C$category %in% c("bulk marginal sea", "bulk marginal sea restricting up section"), ]
 
 # benthic foraminifera - determine index vectors and rank matrix
 ai.d13Cbf <- sort(c(as.integer(clean.d13Cbf$ai)), decreasing = FALSE)    
@@ -134,6 +147,11 @@ si.d13Cbf <- clean.d13Cbf$site.index
 d13Cbf.data <- clean.d13Cbf$d13C
 n.d13Cbf = length(d13Cbf.data)
 
+# micrite - determine index vectors and rank matrix
+ai.d13Cmicrite <- sort(c(as.integer(clean.d13Cmicrite$ai)), decreasing = FALSE)
+si.d13Cmicrite <- clean.d13Cmicrite$site.index
+d13Cmicrite.data <- clean.d13Cmicrite$d13C
+n.d13Cmicrite = length(d13Cmicrite.data)
 
 # bulk carbonate - determine index vectors and rank matrix
 ai.d13Cbulk <- sort(c(as.integer(clean.d13Cbulk$ai)), decreasing = FALSE)    
@@ -141,12 +159,17 @@ si.d13Cbulk <- clean.d13Cbulk$site.index
 d13Cbulk.data <- clean.d13Cbulk$d13C
 n.d13Cbulk = length(d13Cbulk.data)
 
+# bulk carbonate semi restricted - determine index vectors and rank matrix
+ai.d13Cbulk_sr <- sort(c(as.integer(clean.d13Cbulk_sr$ai)), decreasing = FALSE)
+si.d13Cbulk_sr <- clean.d13Cbulk_sr$site.index
+d13Cbulk_sr.data <- clean.d13Cbulk_sr$d13C
+n.d13Cbulk_sr = length(d13Cbulk_sr.data)
 
-# brachiopod - determine index vectors and rank matrix
-ai.d13Cbrach <- sort(c(as.integer(clean.d13Cbrach$ai)), decreasing = FALSE)    
-si.d13Cbrach <- clean.d13Cbrach$site.index
-d13Cbrach.data <- clean.d13Cbrach$d13C
-n.d13Cbrach = length(d13Cbrach.data)
+# bulk carbonate marginal sea - determine index vectors and rank matrix
+ai.d13Cbulk_marg <- sort(c(as.integer(clean.d13Cbulk_marg$ai)), decreasing = FALSE)
+si.d13Cbulk_marg <- clean.d13Cbulk_marg$site.index
+d13Cbulk_marg.data <- clean.d13Cbulk_marg$d13C
+n.d13Cbulk_marg = length(d13Cbulk_marg.data)
 
 # index each row of data to 'flattened' data frame combinations 
 ri.d13Cbf <- flattened$row.index[
@@ -155,20 +178,45 @@ ri.d13Cbf <- match(
   interaction(flattened$ai, flattened$site.index))
 ]
 
+ri.d13Cmicrite <- flattened$row.index[
+  ri.d13Cmicrite <- match(
+    interaction(clean.d13Cmicrite$ai, clean.d13Cmicrite$site.index),
+    interaction(flattened$ai, flattened$site.index))
+]
+
 ri.d13Cbulk <- flattened$row.index[
-ri.d13Cbulk <- match(
-  interaction(clean.d13Cbulk$ai, clean.d13Cbulk$site.index),
+  ri.d13Cbulk <- match(
+    interaction(clean.d13Cbulk$ai, clean.d13Cbulk$site.index),
+    interaction(flattened$ai, flattened$site.index))
+]
+
+ri.d13Cbulk_sr <- flattened$row.index[
+ri.d13Cbulk_sr <- match(
+  interaction(clean.d13Cbulk_sr$ai, clean.d13Cbulk_sr$site.index),
   interaction(flattened$ai, flattened$site.index))
 ]
 
-ri.d13Cbrach <- flattened$row.index[
-ri.d13Cbrach <- match(
-  interaction(clean.d13Cbrach$ai, clean.d13Cbrach$site.index),
-  interaction(flattened$ai, flattened$site.index))
+ri.d13Cbulk_marg <- flattened$row.index[
+  ri.d13Cbulk_marg <- match(
+    interaction(clean.d13Cbulk_marg$ai, clean.d13Cbulk_marg$site.index),
+    interaction(flattened$ai, flattened$site.index))
 ]
+
+# All mapped?
+stopifnot(!any(is.na(ri.d13Cbf)), !any(is.na(ri.d13Cbulk)))
+
+# Indices in range?
+stopifnot(all(ri.d13Cbf >= 1 & ri.d13Cbf <= nrow(flattened)))
+stopifnot(all(ri.d13Cbulk >= 1 & ri.d13Cbulk <= nrow(flattened)))
+stopifnot(all(ri.d13Cmicrite >= 1 & ri.d13Cmicrite <= nrow(flattened)))
+stopifnot(all(ri.d13Cbulk_sr >= 1 & ri.d13Cbulk_sr <= nrow(flattened)))
+stopifnot(all(ri.d13Cbulk_marg >= 1 & ri.d13Cbulk_marg <= nrow(flattened)))
+
+# No silent duplication problems?
+stopifnot(length(unique(flattened$row.index)) == nrow(flattened))
 
 # BWT interpolated for time steps
-BWT.Cen <- as.data.frame(read.csv(file = "PhanData/CenozoicBWT.csv"))
+BWT.Cen <- as.data.frame(read.csv(file = "Phan/PhanData/CenozoicBWT.csv"))
 names(BWT.Cen) <- c("age", "BWT", "BWT_2sd")
 BWT.Cen$age <- BWT.Cen$age*1e3
 BWT.Cen <- BWT.Cen[order(BWT.Cen$age, decreasing = TRUE),]
@@ -196,7 +244,28 @@ toff.sd <- flattened$temp_offset_sd_interp
 } else if (temp_offset_model == "PhanDA"){
   toff.m <- flattened$temp_offset_PhanDA_interp
   toff.sd <- flattened$temp_offset_sd_interp
- }
+}
+
+stopifnot(!any(is.na(GMST.m)), !any(is.na(GMST.sd)))
+stopifnot(!any(is.na(BWT.m)), !any(is.na(BWT.sd)))
+
+
+# Catch indexing misalignment
+
+plot(age.indices$age, GMST.m, type='l', main='GMST.m on JAGS grid', xlab='age (kyr)', ylab='°C')
+lines(age.indices$age, GMST.sd, lty=2)
+
+plot(age.indices$age, BWT.m,  type='l', main='BWT.m on JAGS grid', xlab='age (kyr)', ylab='°C')
+lines(age.indices$age, BWT.sd, lty=2)
+
+# Where are observations in (ai, site) space?
+plot(flattened$ai, flattened$site.index, pch='.', main='Flattened (ai, site)')
+points(flattened$ai[ri.d13Cbf],   flattened$site.index[ri.d13Cbf],   col=2, pch=19, cex=.4)
+points(flattened$ai[ri.d13Cbulk], flattened$site.index[ri.d13Cbulk], col=4, pch=19, cex=.4)
+points(flattened$ai[ri.d13Cbulk_sr], flattened$site.index[ri.d13Cbulk_sr], col=6, pch=19, cex=.4)
+points(flattened$ai[ri.d13Cbulk_marg], flattened$site.index[ri.d13Cbulk_marg], col=8, pch=19, cex=.4)
+points(flattened$ai[ri.d13Cmicrite], flattened$site.index[ri.d13Cmicrite], col=10, pch=19, cex=.4)
+legend('topright', c('bf','bulk', 'micrite', 'sr', 'marg'), col=c(2,4,6,8,10), pch=19, bty='n')
 
 # Select objects to pass to jags 
 ############################################################################################
@@ -219,45 +288,84 @@ data.pass.bf = list("d13Cbf.data" = d13Cbf.data,
                     "ai.d13Cbf" = ai.d13Cbf,
                     "ri.d13Cbf" = ri.d13Cbf,
                     "n.d13Cbf" = n.d13Cbf,
-                    "bf.alteration" =bf.alteration)
+                    "bf.nsb.m" = bf.nsb.m,
+                    "bf.nsb.sd" = bf.nsb.sd)
+
+data.pass.micrite = list("d13Cmicrite.data" = d13Cmicrite.data,
+                      "ai.d13Cmicrite" = ai.d13Cmicrite,
+                      "ri.d13Cmicrite" = ri.d13Cmicrite,
+                      "n.d13Cmicrite" = n.d13Cmicrite,
+                      "micrite.nsb.m" = micrite.nsb.m,
+                      "micrite.nsb.sd" = micrite.nsb.sd)
 
 data.pass.bulk = list("d13Cbulk.data" = d13Cbulk.data,   
                       "ai.d13Cbulk" = ai.d13Cbulk,
                       "ri.d13Cbulk" = ri.d13Cbulk,
                       "n.d13Cbulk" = n.d13Cbulk,
-                      "bulk.alteration" = bulk.alteration)
+                      "bulk.nsb.m" = bulk.nsb.m,
+                      "bulk.nsb.sd" = bulk.nsb.sd)
 
-data.pass.brach = list("d13Cbrach.data" = d13Cbrach.data,   
-                       "ai.d13Cbrach" = ai.d13Cbrach,
-                       "ri.d13Cbrach" = ri.d13Cbrach,
-                       "n.d13Cbrach" = n.d13Cbrach,
-                       "brach.alteration" = brach.alteration)
+data.pass.bulk_sr = list("d13Cbulk_sr.data" = d13Cbulk_sr.data,
+                      "ai.d13Cbulk_sr" = ai.d13Cbulk_sr,
+                      "ri.d13Cbulk_sr" = ri.d13Cbulk_sr,
+                      "n.d13Cbulk_sr" = n.d13Cbulk_sr,
+                      "bulk_sr.nsb.m" = bulk_sr.nsb.m,
+                      "bulk_sr.nsb.sd" = bulk_sr.nsb.sd)
 
-data.pass <- c(data.pass, data.pass.bf, data.pass.bulk, data.pass.brach)
+data.pass.bulk_marg = list("d13Cbulk_marg.data" = d13Cbulk_marg.data,
+                      "ai.d13Cbulk_marg" = ai.d13Cbulk_marg,
+                      "ri.d13Cbulk_marg" = ri.d13Cbulk_marg,
+                      "n.d13Cbulk_marg" = n.d13Cbulk_marg,
+                      "bulk_marg.nsb.m" = bulk_marg.nsb.m,
+                      "bulk_marg.nsb.sd" = bulk_marg.nsb.sd)
+
+
+data.pass <- c(data.pass, data.pass.bf, data.pass.micrite, data.pass.bulk, data.pass.bulk_sr, data.pass.bulk_marg)
 
 ############################################################################################
 
 
 # Parameters to save as output 
 ############################################################################################
-parms = c("d13CO2", "GMST", "BWT", "tempC", "tempC_bot", "toff", "toff_bot", "d13Cbf", "d13Cbulk")
+parms = c("d13CO2", "GMST", "BWT", "tempC", "tempC_bot", "toff", "toff_bot", "d13Cbf", "d13Cbulk",
+        "d13Cbulk_sr", "d13Cbulk_marg", "d13Cmicrite")
+
 ############################################################################################
 
 
 # Run the inversion using jags 
 ############################################################################################
-n.chains <- 6
-n.iter <- 5e4
-n.burnin <- 1e4
-n.thin <- 10
 
 system.time({inv.out = jags.parallel(data = data.pass, model.file = "Phan/d13CO2_PSM.R", 
-                                     parameters.to.save = parms, inits = NULL, n.chains = 3, 
-                                     n.iter = 1e4, n.burnin = 5e3, n.thin = 1)})
+                                     parameters.to.save = parms, inits = NULL, n.chains = 6, 
+                                     n.iter = 5e4, n.burnin = 1e4, n.thin = 10)})
 
 ############################################################################################
-# 110 time steps, 3 chains and 1e4 iteration takes 4 minutes 
-# 110 time steps, 6 chains and 5e4 iteration takes 24 minutes 
-# 550 time steps, 6 chains and 5e4 iteration takes 54 minutes 
+# 550 time steps, 3 chains and 1e4 iteration takes 6.5 minutes 
+# 550 time steps, 6 chains and 5e4 iteration takes 38 minutes 
+
+
+
+# Posterior draws for model-predicted bulk d13C at every (ai, site) in `flattened`
+bulk_fit <- inv.out$BUGSoutput$sims.list$d13Cbulk  # matrix: [iterations, nrow(flattened)]
+stopifnot(ncol(bulk_fit) == nrow(flattened))
+
+# Posterior mean at each flattened row
+bulk_mu_all <- colMeans(bulk_fit)
+
+# Match to the observation locations only
+bulk_mu_obs <- bulk_mu_all[ri.d13Cbulk]
+bulk_obs <- d13Cbulk.data
+
+# Sanity check lengths
+stopifnot(length(bulk_mu_obs) == length(bulk_obs))
+
+# Plot observed vs posterior mean prediction (1:1 if well fit)
+plot(bulk_obs, bulk_mu_obs, pch = 19, cex = 0.4,
+     xlab = "Observed bulk d13C",
+     ylab = "Posterior mean prediction")
+abline(0, 1, lty = 2)
+
+
 
 

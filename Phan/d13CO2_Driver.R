@@ -337,10 +337,9 @@ parms = c("d13CO2", "GMST", "BWT", "tempC", "tempC_bot", "toff", "toff_bot", "d1
 
 # Run the inversion using jags 
 ############################################################################################
-
 system.time({inv.out = jags.parallel(data = data.pass, model.file = "Phan/d13CO2_PSM_nopool.R", 
                                      parameters.to.save = parms, inits = NULL, n.chains = 3, 
-                                     n.iter = 3e3, n.burnin = 1e3, n.thin = 1)})
+                                     n.iter = 1e4, n.burnin = 3e3, n.thin = 1)})
 
 
 ############################################################################################

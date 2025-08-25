@@ -19,7 +19,7 @@ step.int <- 1000
 n.spinup <- 10
 
 # select from 'PhanDA' or 'Li22' 
-GMST_model <- "PhanDA" 
+GMST_model <- "Li22" 
 
 # uniform standard deviation applied to GMST from Li et al (2022); they do not provide uncertainty estimates
 GMST_sd_Li22 <- 5
@@ -49,11 +49,11 @@ micrite.nsb.m <- 0
 micrite.nsb.sd <- 0.25
 
 # Bulk carbonate - semi-restricted
-bulk_sr.nsb.m <- 0
+bulk_sr.nsb.m <- 1
 bulk_sr.nsb.sd <- 1
 
 # Bulk carbonate - marginal sea
-bulk_marg.nsb.m <- 0
+bulk_marg.nsb.m <- 0.5
 bulk_marg.nsb.sd <- 1
 
 ############################################################################################
@@ -131,7 +131,7 @@ flattened$temp_offset_sd_interp <- approx(prox.in$age, prox.in$temp_offset_sd,  
 flattened <- flattened[order(flattened$ai, flattened$site.index), ]
 flattened$row.index <- 1:nrow(flattened)
 rownames(flattened) <- NULL
-si.flat <- flattened$site.index
+
 
 # clean and prepare proxy data 
 clean.d13C <- prox.in[complete.cases(prox.in$d13C), ]
@@ -273,7 +273,6 @@ legend('topright', c('bf','bulk', 'micrite', 'sr', 'marg'), col=c(2,4,6,8,10), p
 data.pass = list("n.steps" = n.steps,
                  "dt" = dt,
                  "n.sites" = n.sites,
-                 "si.flat" = si.flat,
                  "ai.flat" = ai.flat,
                  "GMST.m" = GMST.m,
                  "GMST.sd" = GMST.sd,
@@ -329,8 +328,7 @@ data.pass <- c(data.pass, data.pass.bf, data.pass.micrite, data.pass.bulk, data.
 # Parameters to save as output 
 ############################################################################################
 parms = c("d13CO2", "GMST", "BWT", "tempC", "tempC_bot", "toff", "toff_bot", "d13Cbf", "d13Cbulk",
-        "d13Cbulk_sr", "d13Cbulk_marg", "d13Cmicrite", "bf.nsb_site", "bulk.nsb_site", 
-        "micrite.nsb_site", "bulk_sr.nsb_site", "bulk_marg.nsb_site")
+        "d13Cbulk_sr", "d13Cbulk_marg", "d13Cmicrite")
 
 ############################################################################################
 
@@ -338,14 +336,20 @@ parms = c("d13CO2", "GMST", "BWT", "tempC", "tempC_bot", "toff", "toff_bot", "d1
 # Run the inversion using jags 
 ############################################################################################
 
-system.time({inv.out = jags.parallel(data = data.pass, model.file = "Phan/d13CO2_PSM_nopool.R", 
-                                     parameters.to.save = parms, inits = NULL, n.chains = 3, 
-                                     n.iter = 3e3, n.burnin = 1e3, n.thin = 1)})
+system.time({inv.out = jags.parallel(data = data.pass, model.file = "Phan/d13CO2_PSM.R", 
+                                     parameters.to.save = parms, inits = NULL, n.chains = 6, 
+                                     n.iter = 3e5, n.burnin = 1e5, n.thin = 100)})
 
 ############################################################################################
 # 550 time steps, 3 chains and 1e4 iteration takes 6.5 minutes 
 # 550 time steps, 6 chains and 5e4 iteration takes 38 minutes 
-# 550 time steps, 6 chains and 3e5 iteration takes 3.5 hours
+
+save(inv.out, file = "inv.out_LiGMST.rda")
+save(ages, file = "ages_LiGMST.rda")
+save(prox.in, file = "prox.in_LiGMST.rda")
+save(flattened, file = "flattened_LiGMST.rda")
+save(BWT, file = "BWT_LiGMST.rda")
+save(sites, file = "sites_LiGMST.rda")
 
 # Posterior draws for model-predicted bulk d13C at every (ai, site) in `flattened`
 bulk_fit <- inv.out$BUGSoutput$sims.list$d13Cbulk  # matrix: [iterations, nrow(flattened)]

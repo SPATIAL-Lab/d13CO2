@@ -84,14 +84,23 @@ for (i in 1:length(parms2plot)){
 }  
 
 
+############################################################################################
+# Density plots of individual timesteps of d13CO2
+
+############################################################################################
+
+timestep = 17
+
 plot(x = c(-13,1), y =c(0,1.2), col= NULL, xlab = expression(paste(delta^{13}, "C (\u2030 VPDB)")),
      ylab = "Probability Density")
 polygon(density(rnorm(100000, -6, 2)), col =adjustcolor("slateblue", alpha.f = 0.50), border = NA)
-polygon(density(inv.out$BUGSoutput$sims.list$d13CO2[,17]),
+polygon(density(inv.out$BUGSoutput$sims.list$d13CO2[,timestep]),
         col = adjustcolor("coral1", alpha.f = 0.50), border = NA, title = NULL)
-lines(x = c(inv.out$BUGSoutput$median$d13CO2[17],inv.out$BUGSoutput$median$d13CO2[5]), y = c(0,1.2),
+lines(x = c(inv.out$BUGSoutput$median$d13CO2[timestep],inv.out$BUGSoutput$median$d13CO2[timestep]), y = c(0,1.2),
       col = "black", lty = "dashed")
 lines(x = c(-6,-6), y = c(0,0.2), col = "black", lty = "dashed")
+
+
 
 
 

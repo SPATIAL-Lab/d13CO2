@@ -11,8 +11,13 @@
 .DS_Store
 /working/
 /saved_env/
+/Phan/chcp/
+/Phan/chpc_output/
 /Phan/PhanData/High_Resolution_Climate_Simulation_Dataset_540_Myr.nc
-
+/Phan/PhanData/PhanCompWithTemp_MU22.csv
+/Phan/PhanData/PhanCompWithTemp_TC17.csv
+/Phan/PhanData/PhanCompPaleocoord_MU22.csv
+/Phan/PhanData/PhanCompPaleocoord_TC17.csv
 
 # Example code in package build process
 *-Ex.R

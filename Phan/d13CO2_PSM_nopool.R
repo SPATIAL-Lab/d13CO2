@@ -57,13 +57,15 @@ model {
   f_co3 ~ dnorm(0.12, 1/0.04^2)T(0.04,0.20)
   f_carbacid ~ dnorm(0.01, 1/0.005^2)T(0,0.02)
   
-  # Non-secular bias
-  bf.nsb ~ dnorm(bf.nsb.m, bf.nsb.sd)
-  bulk.nsb ~ dnorm(bulk.nsb.m, bulk.nsb.sd)
-  micrite.nsb ~ dnorm(micrite.nsb.m, micrite.nsb.sd)
-  bulk_sr.nsb ~ dnorm(bulk_sr.nsb.m, bulk_sr.nsb.sd)
-  bulk_marg.nsb ~ dnorm(bulk_marg.nsb.m, bulk_marg.nsb.sd)
 
+  # Site-level NSBs
+  for (i in 1:n.sites){
+    bf.nsb_site[i] ~ dnorm(bf.nsb.m, bf.nsb.sd)
+    bulk.nsb_site[i] ~ dnorm(bulk.nsb.m, bulk.nsb.sd)
+    micrite.nsb_site[i] ~ dnorm(micrite.nsb.m, micrite.nsb.sd)
+    bulk_sr.nsb_site[i] ~ dnorm(bulk_sr.nsb.m, bulk_sr.nsb.sd)
+    bulk_marg.nsb_site[i] ~ dnorm(bulk_marg.nsb.m, bulk_marg.nsb.sd)
+  }
   
   # Proxy system model 
   ####################################################################################################
@@ -80,14 +82,14 @@ model {
 
       # Calculate various carbonate archive d13C values
       d13Cbulk_secular[i] <- d13CO2[ai.flat[i]] + eps.cc_co2_surf[i]
-      d13Cbulk[i] <- d13Cbulk_secular[i] + bulk.nsb
-      d13Cmicrite[i] <- d13Cbulk_secular[i] + micrite.nsb
-      d13Cbulk_sr[i] <- d13Cbulk_secular[i] + bulk_sr.nsb
-      d13Cbulk_marg[i] <- d13Cbulk_secular[i] + bulk_marg.nsb
+      d13Cbulk[i] <- d13Cbulk_secular[i] + bulk.nsb_site[si.flat[i]]
+      d13Cmicrite[i] <- d13Cbulk_secular[i] + micrite.nsb_site[si.flat[i]]
+      d13Cbulk_sr[i] <- d13Cbulk_secular[i] + bulk_sr.nsb_site[si.flat[i]]
+      d13Cbulk_marg[i] <- d13Cbulk_secular[i] + bulk_marg.nsb_site[si.flat[i]]
       
       # Benthic forams; equation 7 of Tipple et al. (2010)
       d13Cbf[i] <- ((d13CO2[ai.flat[i]]+1000)*((eps.dic_co2_bot[i]/1000)+1)) - eps.dic_cc 
-                    - A - 1000 + bf.nsb
+                    - A - 1000 + bf.nsb_site[si.flat[i]]
   }
   
   

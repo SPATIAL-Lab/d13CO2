@@ -1,3 +1,13 @@
+
+
+#  Load objects:
+load("Phan/chpc_output/prox.in_PhanDA.rda")
+load("Phan/chpc_output/flattened_PhanDA.rda")
+load("Phan/chpc_output/inv.out_PhanDA.rda")
+load("Phan/chpc_output/BWT_PhanDA.rda")
+load("Phan/chpc_output/sites_PhanDA.rda")
+
+
 #  Assumed objects:
 #    prox.in: proxy data.frame
 #    flattened: data.frame with columns ai, site.index, ages

@@ -49,11 +49,11 @@ micrite.nsb.m <- 0
 micrite.nsb.sd <- 0.25
 
 # Bulk carbonate - semi-restricted
-bulk_sr.nsb.m <- 0
+bulk_sr.nsb.m <- 1
 bulk_sr.nsb.sd <- 1
 
 # Bulk carbonate - marginal sea
-bulk_marg.nsb.m <- 0
+bulk_marg.nsb.m <- 0.5
 bulk_marg.nsb.sd <- 1
 
 ############################################################################################
@@ -63,7 +63,7 @@ bulk_marg.nsb.sd <- 1
 ############################################################################################
 
 # load proxy data
-prox.in <- as.data.frame(read.csv(file = "Phan/PhanData/PhanCompWithTemp.csv"))
+prox.in <- as.data.frame(read.csv(file = "Phan/PhanData/PhanCompWithTemp_MU22.csv"))
 prox.in <- cbind(prox.in[,3:18], rep(x = toff_sd_uniform, times = nrow(prox.in)))
 names(prox.in) <- c("age", "d13C", "source", "site", "lat", "lon", "category", 
                     "paleolon","paleolat", "MAT", "GMST_Li22", "GMST_PhanDA", "GMST_PhanDA_hi",
@@ -131,7 +131,7 @@ flattened$temp_offset_sd_interp <- approx(prox.in$age, prox.in$temp_offset_sd,  
 flattened <- flattened[order(flattened$ai, flattened$site.index), ]
 flattened$row.index <- 1:nrow(flattened)
 rownames(flattened) <- NULL
-si.flat <- flattened$site.index
+
 
 # clean and prepare proxy data 
 clean.d13C <- prox.in[complete.cases(prox.in$d13C), ]
@@ -273,7 +273,6 @@ legend('topright', c('bf','bulk', 'micrite', 'sr', 'marg'), col=c(2,4,6,8,10), p
 data.pass = list("n.steps" = n.steps,
                  "dt" = dt,
                  "n.sites" = n.sites,
-                 "si.flat" = si.flat,
                  "ai.flat" = ai.flat,
                  "GMST.m" = GMST.m,
                  "GMST.sd" = GMST.sd,
@@ -329,8 +328,7 @@ data.pass <- c(data.pass, data.pass.bf, data.pass.micrite, data.pass.bulk, data.
 # Parameters to save as output 
 ############################################################################################
 parms = c("d13CO2", "GMST", "BWT", "tempC", "tempC_bot", "toff", "toff_bot", "d13Cbf", "d13Cbulk",
-        "d13Cbulk_sr", "d13Cbulk_marg", "d13Cmicrite", "bf.nsb_site", "bulk.nsb_site", 
-        "micrite.nsb_site", "bulk_sr.nsb_site", "bulk_marg.nsb_site")
+        "d13Cbulk_sr", "d13Cbulk_marg", "d13Cmicrite")
 
 ############################################################################################
 
@@ -338,14 +336,20 @@ parms = c("d13CO2", "GMST", "BWT", "tempC", "tempC_bot", "toff", "toff_bot", "d1
 # Run the inversion using jags 
 ############################################################################################
 
-system.time({inv.out = jags.parallel(data = data.pass, model.file = "Phan/d13CO2_PSM_nopool.R", 
-                                     parameters.to.save = parms, inits = NULL, n.chains = 3, 
-                                     n.iter = 3e3, n.burnin = 1e3, n.thin = 1)})
+system.time({inv.out = jags.parallel(data = data.pass, model.file = "Phan/d13CO2_PSM.R", 
+                                     parameters.to.save = parms, inits = NULL, n.chains = 6, 
+                                     n.iter = 3e5, n.burnin = 1e5, n.thin = 100)})
 
 ############################################################################################
 # 550 time steps, 3 chains and 1e4 iteration takes 6.5 minutes 
 # 550 time steps, 6 chains and 5e4 iteration takes 38 minutes 
-# 550 time steps, 6 chains and 3e5 iteration takes 3.5 hours
+
+save(inv.out, file = "inv.out_MU22.rda")
+save(ages, file = "ages_MU22.rda")
+save(prox.in, file = "prox.in_MU22.rda")
+save(flattened, file = "flattened_MU22.rda")
+save(BWT, file = "BWT_MU22.rda")
+save(sites, file = "sites_MU22.rda")
 
 # Posterior draws for model-predicted bulk d13C at every (ai, site) in `flattened`
 bulk_fit <- inv.out$BUGSoutput$sims.list$d13Cbulk  # matrix: [iterations, nrow(flattened)]

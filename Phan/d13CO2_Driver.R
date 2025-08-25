@@ -342,6 +342,7 @@ system.time({inv.out = jags.parallel(data = data.pass, model.file = "Phan/d13CO2
                                      parameters.to.save = parms, inits = NULL, n.chains = 3, 
                                      n.iter = 3e3, n.burnin = 1e3, n.thin = 1)})
 
+
 ############################################################################################
 # 550 time steps, 3 chains and 1e4 iteration takes 6.5 minutes 
 # 550 time steps, 6 chains and 5e4 iteration takes 38 minutes 

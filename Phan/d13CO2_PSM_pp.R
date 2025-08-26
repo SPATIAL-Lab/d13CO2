@@ -57,14 +57,25 @@ model {
   f_co3 ~ dnorm(0.12, 1/0.04^2)T(0.04,0.20)
   f_carbacid ~ dnorm(0.01, 1/0.005^2)T(0,0.02)
   
+  # Non-secular bias uncertainty - hyperpriors set the across-site scatter (partial pooling)
+  bf.nsb_mean ~ dnorm(bf.nsb.m, bf.nsb.sd)         
+  bf.nsb_tau ~ dgamma(1e3, 1e-3)
+  bulk.nsb_mean ~ dnorm(bulk.nsb.m, bulk.nsb.sd)         
+  bulk.nsb_tau ~ dgamma(1e3, 1e-3)
+  micrite.nsb_mean ~ dnorm(micrite.nsb.m, micrite.nsb.sd)         
+  micrite.nsb_tau ~ dgamma(1e3, 1e-3)
+  bulk_sr.nsb_mean ~ dnorm(bulk_sr.nsb.m, bulk_sr.nsb.sd)         
+  bulk_sr.nsb_tau ~ dgamma(1e3, 1e-3)
+  bulk_marg.nsb_mean ~ dnorm(bulk_marg.nsb.m, bulk_marg.nsb.sd)         
+  bulk_marg.nsb_tau ~ dgamma(1e3, 1e-3)
 
   # Site-level NSBs
   for (i in 1:n.sites){
-    bf.nsb_site[i] ~ dnorm(bf.nsb.m, bf.nsb.sd)
-    bulk.nsb_site[i] ~ dnorm(bulk.nsb.m, bulk.nsb.sd)
-    micrite.nsb_site[i] ~ dnorm(micrite.nsb.m, micrite.nsb.sd)
-    bulk_sr.nsb_site[i] ~ dnorm(bulk_sr.nsb.m, bulk_sr.nsb.sd)
-    bulk_marg.nsb_site[i] ~ dnorm(bulk_marg.nsb.m, bulk_marg.nsb.sd)
+    bf.nsb_site[i] ~ dnorm(bf.nsb_mean, bf.nsb_tau)
+    bulk.nsb_site[i] ~ dnorm(bulk.nsb_mean, bulk.nsb_tau)
+    micrite.nsb_site[i] ~ dnorm(micrite.nsb_mean, micrite.nsb_tau)
+    bulk_sr.nsb_site[i] ~ dnorm(bulk_sr.nsb_mean, bulk_sr.nsb_tau)
+    bulk_marg.nsb_site[i] ~ dnorm(bulk_marg.nsb_mean, bulk_marg.nsb_tau)
   }
   
   # Proxy system model 
@@ -95,7 +106,7 @@ model {
   
   # Time evolution model  
   ####################################################################################################
-  d13CO2[1] ~ dnorm(d13CO2.m, 1/d13CO2.sd^2)
+  d13CO2[1] ~ dunif(d13CO2.l, d13CO2.u)
   d13CO2_sigma ~ dunif(0, 0.5)         
   d13CO2_tau <- 1 / (d13CO2_sigma^2)
   

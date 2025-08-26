@@ -58,11 +58,25 @@ model {
   f_carbacid ~ dnorm(0.01, 1/0.005^2)T(0,0.02)
   
   # Non-secular bias
-  bf.nsb ~ dnorm(bf.nsb.m, bf.nsb.sd)
-  bulk.nsb ~ dnorm(bulk.nsb.m, bulk.nsb.sd)
-  micrite.nsb ~ dnorm(micrite.nsb.m, micrite.nsb.sd)
-  bulk_sr.nsb ~ dnorm(bulk_sr.nsb.m, bulk_sr.nsb.sd)
-  bulk_marg.nsb ~ dnorm(bulk_marg.nsb.m, bulk_marg.nsb.sd)
+  bf.nsb_mean ~ dnorm(bulk_sr.nsb.m, 1/bulk_sr.nsb.sd^2)
+  bf.nsb_tau ~ dgamma(1e2, 2e3)
+  bf.nsb ~ dnorm(bf.nsb_mean, bf.nsb_tau)
+  
+  bulk.nsb_mean ~ dnorm(bulk.nsb.m, 1/bulk.nsb.sd^2)
+  bulk.nsb_tau ~ dgamma(1e2, 2e3)
+  bulk.nsb ~ dnorm(bulk.nsb_mean, bulk.nsb_tau)
+  
+  micrite.nsb_mean ~ dnorm(micrite.nsb.m, 1/micrite.nsb.sd^2)
+  micrite.nsb_tau ~ dgamma(1e2, 2e3)
+  micrite.nsb ~ dnorm(micrite.nsb_mean, micrite.nsb_tau)
+
+  bulk_sr.nsb_mean ~ dnorm(bulk_sr.nsb.m, 1/bulk_sr.nsb.sd^2)
+  bulk_sr.nsb_tau ~ dgamma(1e2, 2e3)
+  bulk_sr.nsb ~ dnorm(bulk_sr.nsb_mean, bulk_sr.nsb_tau)
+  
+  bulk_marg.nsb_mean ~ dnorm(bulk_marg.nsb.m, 1/bulk_marg.nsb.sd^2)
+  bulk_marg.nsb_tau ~ dgamma(1e2, 2e3)
+  bulk_marg.nsb ~ dnorm(bulk_marg.nsb_mean, bulk_marg.nsb_tau)
 
   
   # Proxy system model 
@@ -93,7 +107,7 @@ model {
   
   # Time evolution model  
   ####################################################################################################
-  d13CO2[1] ~ dnorm(d13CO2.m, 1/d13CO2.sd^2)
+  d13CO2[1] ~ dunif(d13CO2.l, d13CO2.u)
   d13CO2_sigma ~ dunif(0, 0.5)         
   d13CO2_tau <- 1 / (d13CO2_sigma^2)
   

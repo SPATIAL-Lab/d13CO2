@@ -329,15 +329,15 @@ data.pass <- c(data.pass, data.pass.bf, data.pass.micrite, data.pass.bulk, data.
 # Parameters to save as output 
 ############################################################################################
 parms = c("d13CO2", "GMST", "BWT", "tempC", "tempC_bot", "toff", "toff_bot", "d13Cbf", "d13Cbulk",
-        "d13Cbulk_sr", "d13Cbulk_marg", "d13Cmicrite", "bf.nsb", "bulk.nsb", 
-        "micrite.nsb", "bulk_sr.nsb", "bulk_marg.nsb")
+        "d13Cbulk_sr", "d13Cbulk_marg", "d13Cmicrite", "bf.nsb_site", "bulk.nsb_site", 
+        "micrite.nsb_site", "bulk_sr.nsb_site", "bulk_marg.nsb_site")
 
 ############################################################################################
 
 
 # Run the inversion using jags 
 ############################################################################################
-system.time({inv.out = jags.parallel(data = data.pass, model.file = "Phan/d13CO2_PSM.R", 
+system.time({inv.out = jags.parallel(data = data.pass, model.file = "Phan/d13CO2_PSM_hyperspartialpool.R", 
                                      parameters.to.save = parms, inits = NULL, n.chains = 3, 
                                      n.iter = 1e4, n.burnin = 3e3, n.thin = 1)})
 

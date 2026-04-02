@@ -18,16 +18,17 @@ age.max <- 540000
 step.int <- 1000
 n.spinup <- 10
 
-# select from 'PhanDA' or 'Li22' 
+# select from 'PhanDA' or 'Scotese21' 
 GMST_model <- "PhanDA" 
 
-# uniform standard deviation applied to GMST from Li et al (2022); they do not provide uncertainty estimates
-GMST_sd_Li22 <- 5
+# uniform standard deviation applied to GMST from Scotese et al. (2021) used in Li et al (2022); 
+# they do not provide uncertainty estimates
+GMST_sd_Scotese21 <- 5
 
-# select 'PhanDA' for Li22 MAT minus PhanDA GMST; select 'Li22' for Li22 MAT minus Li22 GMST; 
+# select 'PhanDA' for Li22 MAT minus PhanDA GMST; select 'Li22' for Li22 MAT minus Scotese21 GMST (same as Li22 GMST); 
 temp_offset_model <- "Li22" 
 
-# uniform standard deviation applied to all surface temperature site offset values - no uncertainty in Li22 estimates
+# uniform standard deviation applied to all surface temperature site offset values - no uncertainty in Scotese21 estimates
 toff_sd_uniform <- 2 
 
 # uniform standard deviation applied to all bottom temperature site offset values 
@@ -86,12 +87,12 @@ bulk_marg.nsb.sd <- 0.75
 # prox.in <- as.data.frame(read.csv(file = "Phan/PhanData/PhanCompWithTemp.csv"))
 # prox.in <- cbind(prox.in[,3:18], rep(x = toff_sd_uniform, times = nrow(prox.in)))
 # names(prox.in) <- c("age", "d13C", "source", "site", "lat", "lon", "category", 
-#                     "paleolon","paleolat", "MAT", "GMST_Li22", "GMST_PhanDA", "GMST_PhanDA_hi",
+#                     "paleolon","paleolat", "MAT", "GMST_Scotese21", "GMST_PhanDA", "GMST_PhanDA_hi",
 #                     "GMST_PhanDA_lo", "temp_offset", "temp_offset_PhanDA", "temp_offset_sd")
 prox.in <- as.data.frame(read.csv(file = "Phan/PhanData/PhanCompWithTemp_PALEOMAP.csv"))
 prox.in <- cbind(prox.in[,1:7], prox.in[,9:10], prox.in[,21:27],rep(x = toff_sd_uniform, times = nrow(prox.in)))
 names(prox.in) <- c("age", "d13C", "source", "site", "lat", "lon", "category", 
-                    "paleolon","paleolat", "MAT", "GMST_Li22", "GMST_PhanDA", "GMST_PhanDA_hi",
+                    "paleolon","paleolat", "MAT", "GMST_Scotese21", "GMST_PhanDA", "GMST_PhanDA_hi",
                     "GMST_PhanDA_lo", "temp_offset", "temp_offset_PhanDA", "temp_offset_sd")
 # age index proxy data (in kyrs)
 prox.in$age <- prox.in$age*1e3
@@ -119,9 +120,9 @@ PhanDA_sd <- ((prox.in$GMST_PhanDA_hi - prox.in$GMST_PhanDA) +
 if (GMST_model == "PhanDA"){
   GMST.m <- approx(prox.in$age, prox.in$GMST_PhanDA, xout = ages, rule = 2)$y
   GMST.sd <- approx(prox.in$age, PhanDA_sd, xout = ages, rule = 2)$y
-} else if (GMST_model == "Li22"){
-  GMST.m <- approx(prox.in$age, prox.in$GMST_Li22, xout = ages, rule = 2)$y
-  GMST.sd <- rep(x = GMST_sd_Li22, times = length(ages)) 
+} else if (GMST_model == "Scotese21"){
+  GMST.m <- approx(prox.in$age, prox.in$GMST_Scotese21, xout = ages, rule = 2)$y
+  GMST.sd <- rep(x = GMST_sd_Scotese21, times = length(ages)) 
 }
 
 
@@ -147,7 +148,7 @@ flattened$ages <- age.indices$age[match(flattened$ai, age.indices$ai)]
 
 # interpolate each column at the specified 'ages'
 flattened$GMST_PhanDA_interp <- approx(prox.in$age, prox.in$GMST_PhanDA, xout = flattened$ages, rule = 2)$y
-flattened$GMST_Li22_interp <- approx(prox.in$age, prox.in$GMST_Li22,    xout = flattened$ages, rule = 2)$y
+flattened$GMST_Scotese21_interp <- approx(prox.in$age, prox.in$GMST_Scotese21,    xout = flattened$ages, rule = 2)$y
 flattened$GMST_PhanDA_sd_interp <- approx(prox.in$age, PhanDA_sd, xout = flattened$ages, rule = 2)$y
 flattened$temp_offset_interp <- approx(prox.in$age, prox.in$temp_offset, xout = flattened$ages, rule = 2)$y
 flattened$temp_offset_PhanDA_interp <- approx(prox.in$age, prox.in$temp_offset_PhanDA, xout = flattened$ages, rule = 2)$y

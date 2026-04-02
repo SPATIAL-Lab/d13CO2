@@ -377,9 +377,9 @@ data.pass = list("n.steps" = n.steps,
                  "n.sites" = n.sites,
                  "si.flat" = si.flat,
                  "ai.flat" = ai.flat,
-                 "GMST.m" = GMST.m,
+                 "GMST.obs" = GMST.m,
                  "GMST.sd" = GMST.sd,
-                 "BWT.m" = BWT.m, 
+                 "BWT.obs" = BWT.m, 
                  "BWT.sd" = BWT.sd, 
                  "toff_sd_uniform_bot" = toff_sd_uniform_bot,
                  "toff.m" = toff.m,
@@ -477,8 +477,8 @@ parms = c("d13CO2", "GMST", "BWT", "tempC", "tempC_bot", "toff", "toff_bot", "d1
 # Run the inversion using jags 
 ############################################################################################
 system.time({inv.out = jags.parallel(data = data.pass, model.file = "Phan/d13CO2_PSM_pp.R", 
-                                     parameters.to.save = parms, inits = NULL, n.chains = 3, 
-                                     n.iter = 1e3, n.burnin = 3e2, n.thin = 1)})
+                                     parameters.to.save = parms, inits = NULL, n.chains = 6, 
+                                     n.iter = 3e5, n.burnin = 1e5, n.thin = 500)})
 
 
 ############################################################################################

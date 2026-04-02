@@ -40,13 +40,33 @@ toff_sd_uniform_bot <- 1
 bf.nsb.m <- 0
 bf.nsb.sd <- 0.25
 
-# Bulk carbonate - open ocean
-bulk.nsb.m <- 0
-bulk.nsb.sd <- 0.5
+# Planktic forams
+pf.nsb.m <- 0
+pf.nsb.sd <- 0.25
+
+# Brachiopods
+brach.nsb.m <- 0
+brach.nsb.sd <- 1
+
+# Bivalves
+bivalve.nsb.m <- 0
+bivalve.nsb.sd <- 1
+
+# Ammonites
+amm.nsb.m <- 0
+amm.nsb.sd <- 1
+
+# Belemnites
+bel.nsb.m <- 0
+bel.nsb.sd <- 1
 
 # micrite - open ocean
 micrite.nsb.m <- 0
 micrite.nsb.sd <- 0.25
+
+# Bulk carbonate - open ocean
+bulk.nsb.m <- 0
+bulk.nsb.sd <- 0.5
 
 # Bulk carbonate - semi-restricted
 bulk_sr.nsb.m <- 0
@@ -63,12 +83,16 @@ bulk_marg.nsb.sd <- 0.75
 ############################################################################################
 
 # load proxy data
-prox.in <- as.data.frame(read.csv(file = "Phan/PhanData/PhanCompWithTemp.csv"))
-prox.in <- cbind(prox.in[,3:18], rep(x = toff_sd_uniform, times = nrow(prox.in)))
+# prox.in <- as.data.frame(read.csv(file = "Phan/PhanData/PhanCompWithTemp.csv"))
+# prox.in <- cbind(prox.in[,3:18], rep(x = toff_sd_uniform, times = nrow(prox.in)))
+# names(prox.in) <- c("age", "d13C", "source", "site", "lat", "lon", "category", 
+#                     "paleolon","paleolat", "MAT", "GMST_Li22", "GMST_PhanDA", "GMST_PhanDA_hi",
+#                     "GMST_PhanDA_lo", "temp_offset", "temp_offset_PhanDA", "temp_offset_sd")
+prox.in <- as.data.frame(read.csv(file = "Phan/PhanData/PhanCompWithTemp_PALEOMAP.csv"))
+prox.in <- cbind(prox.in[,1:7], prox.in[,9:10], prox.in[,21:27],rep(x = toff_sd_uniform, times = nrow(prox.in)))
 names(prox.in) <- c("age", "d13C", "source", "site", "lat", "lon", "category", 
                     "paleolon","paleolat", "MAT", "GMST_Li22", "GMST_PhanDA", "GMST_PhanDA_hi",
                     "GMST_PhanDA_lo", "temp_offset", "temp_offset_PhanDA", "temp_offset_sd")
-
 # age index proxy data (in kyrs)
 prox.in$age <- prox.in$age*1e3
 prox.in <- prox.in[prox.in$age >= (age.min) & prox.in$age <= (age.max),]
@@ -136,16 +160,52 @@ si.flat <- flattened$site.index
 # clean and prepare proxy data 
 clean.d13C <- prox.in[complete.cases(prox.in$d13C), ]
 clean.d13Cbf <- clean.d13C[clean.d13C$category == "bf",]
+clean.d13Cpf <- clean.d13C[clean.d13C$category == "Planktonic foraminifera",]
+clean.d13Cbrach <- clean.d13C[clean.d13C$category == "Brachiopod calcite",]
+clean.d13Cbivalve <- clean.d13C[clean.d13C$category == "Bivalve",]
+clean.d13Camm <- clean.d13C[clean.d13C$category == "Ammonite",]
+clean.d13Cbel <- clean.d13C[clean.d13C$category == "Belemnite",]
 clean.d13Cmicrite <- clean.d13C[clean.d13C$category == "micrite open ocean",]
 clean.d13Cbulk <- clean.d13C[clean.d13C$category %in% c("bulk", "bulk open water", "bulk open ocean"), ]
 clean.d13Cbulk_sr <- clean.d13C[clean.d13C$category == "bulk semi restricted",]
 clean.d13Cbulk_marg <- clean.d13C[clean.d13C$category %in% c("bulk marginal sea", "bulk marginal sea restricting up section"), ]
+
 
 # benthic foraminifera - determine index vectors and rank matrix
 ai.d13Cbf <- sort(c(as.integer(clean.d13Cbf$ai)), decreasing = FALSE)    
 si.d13Cbf <- clean.d13Cbf$site.index
 d13Cbf.data <- clean.d13Cbf$d13C
 n.d13Cbf = length(d13Cbf.data)
+
+# planktic foraminifera - determine index vectors and rank matrix
+ai.d13Cpf <- sort(c(as.integer(clean.d13Cpf$ai)), decreasing = FALSE)    
+si.d13Cpf <- clean.d13Cpf$site.index
+d13Cpf.data <- clean.d13Cpf$d13C
+n.d13Cpf = length(d13Cpf.data)
+
+# brachiopod - determine index vectors and rank matrix
+ai.d13Cbrach <- sort(c(as.integer(clean.d13Cbrach$ai)), decreasing = FALSE)    
+si.d13Cbrach <- clean.d13Cbrach$site.index
+d13Cbrach.data <- clean.d13Cbrach$d13C
+n.d13Cbrach = length(d13Cbrach.data)
+
+# bivalve - determine index vectors and rank matrix
+ai.d13Cbivalve <- sort(c(as.integer(clean.d13Cbivalve$ai)), decreasing = FALSE)    
+si.d13Cbivalve <- clean.d13Cbivalve$site.index
+d13Cbivalve.data <- clean.d13Cbivalve$d13C
+n.d13Cbivalve = length(d13Cbivalve.data)
+
+# ammonite - determine index vectors and rank matrix
+ai.d13Camm <- sort(c(as.integer(clean.d13Camm$ai)), decreasing = FALSE)    
+si.d13Camm <- clean.d13Camm$site.index
+d13Camm.data <- clean.d13Camm$d13C
+n.d13Camm = length(d13Camm.data)
+
+# belemnite - determine index vectors and rank matrix
+ai.d13Cbel <- sort(c(as.integer(clean.d13Cbel$ai)), decreasing = FALSE)    
+si.d13Cbel <- clean.d13Cbel$site.index
+d13Cbel.data <- clean.d13Cbel$d13C
+n.d13Cbel = length(d13Cbel.data)
 
 # micrite - determine index vectors and rank matrix
 ai.d13Cmicrite <- sort(c(as.integer(clean.d13Cmicrite$ai)), decreasing = FALSE)
@@ -178,6 +238,36 @@ ri.d13Cbf <- match(
   interaction(flattened$ai, flattened$site.index))
 ]
 
+ri.d13Cpf <- flattened$row.index[
+  ri.d13Cpf <- match(
+    interaction(clean.d13Cpf$ai, clean.d13Cpf$site.index),
+    interaction(flattened$ai, flattened$site.index))
+]
+
+ri.d13Cbrach <- flattened$row.index[
+  ri.d13Cbrach <- match(
+    interaction(clean.d13Cbrach$ai, clean.d13Cbrach$site.index),
+    interaction(flattened$ai, flattened$site.index))
+]
+
+ri.d13Cbivalve <- flattened$row.index[
+  ri.d13Cbivalve <- match(
+    interaction(clean.d13Cbivalve$ai, clean.d13Cbivalve$site.index),
+    interaction(flattened$ai, flattened$site.index))
+]
+
+ri.d13Camm <- flattened$row.index[
+  ri.d13Camm <- match(
+    interaction(clean.d13Camm$ai, clean.d13Camm$site.index),
+    interaction(flattened$ai, flattened$site.index))
+]
+
+ri.d13Cbel <- flattened$row.index[
+  ri.d13Cbel <- match(
+    interaction(clean.d13Cbel$ai, clean.d13Cbel$site.index),
+    interaction(flattened$ai, flattened$site.index))
+]
+
 ri.d13Cmicrite <- flattened$row.index[
   ri.d13Cmicrite <- match(
     interaction(clean.d13Cmicrite$ai, clean.d13Cmicrite$site.index),
@@ -207,6 +297,11 @@ stopifnot(!any(is.na(ri.d13Cbf)), !any(is.na(ri.d13Cbulk)))
 
 # Indices in range?
 stopifnot(all(ri.d13Cbf >= 1 & ri.d13Cbf <= nrow(flattened)))
+stopifnot(all(ri.d13Cpf >= 1 & ri.d13Cpf <= nrow(flattened)))
+stopifnot(all(ri.d13Cbrach >= 1 & ri.d13Cbrach <= nrow(flattened)))
+stopifnot(all(ri.d13Cbivalve >= 1 & ri.d13Cbivalve <= nrow(flattened)))
+stopifnot(all(ri.d13Camm >= 1 & ri.d13Camm <= nrow(flattened)))
+stopifnot(all(ri.d13Cbel >= 1 & ri.d13Cbel <= nrow(flattened)))
 stopifnot(all(ri.d13Cbulk >= 1 & ri.d13Cbulk <= nrow(flattened)))
 stopifnot(all(ri.d13Cmicrite >= 1 & ri.d13Cmicrite <= nrow(flattened)))
 stopifnot(all(ri.d13Cbulk_sr >= 1 & ri.d13Cbulk_sr <= nrow(flattened)))
@@ -261,11 +356,17 @@ lines(age.indices$age, BWT.sd, lty=2)
 # Where are observations in (ai, site) space?
 plot(flattened$ai, flattened$site.index, pch='.', main='Flattened (ai, site)')
 points(flattened$ai[ri.d13Cbf], flattened$site.index[ri.d13Cbf], col=2, pch=19, cex=.4)
+points(flattened$ai[ri.d13Cpf], flattened$site.index[ri.d13Cpf], col=2, pch=19, cex=.4)
+points(flattened$ai[ri.d13Cbrach], flattened$site.index[ri.d13Cbrach], col=2, pch=19, cex=.4)
+points(flattened$ai[ri.d13Cbivalve], flattened$site.index[ri.d13Cbivalve], col=2, pch=19, cex=.4)
+points(flattened$ai[ri.d13Camm], flattened$site.index[ri.d13Camm], col=2, pch=19, cex=.4)
+points(flattened$ai[ri.d13Cbel], flattened$site.index[ri.d13Cbel], col=2, pch=19, cex=.4)
+points(flattened$ai[ri.d13Cbf], flattened$site.index[ri.d13Cbf], col=2, pch=19, cex=.4)
 points(flattened$ai[ri.d13Cbulk], flattened$site.index[ri.d13Cbulk], col=4, pch=19, cex=.4)
 points(flattened$ai[ri.d13Cbulk_sr], flattened$site.index[ri.d13Cbulk_sr], col=6, pch=19, cex=.4)
 points(flattened$ai[ri.d13Cbulk_marg], flattened$site.index[ri.d13Cbulk_marg], col=8, pch=19, cex=.4)
 points(flattened$ai[ri.d13Cmicrite], flattened$site.index[ri.d13Cmicrite], col=10, pch=19, cex=.4)
-legend('topright', c('bf','bulk', 'micrite', 'sr', 'marg'), col=c(2,4,6,8,10), pch=19, bty='n')
+legend('topright', c('bf','pf', 'brach', 'bivavle', 'ammonite', 'belemnite', ' bulk', 'micrite', 'sr', 'marg'), col=c(2,2,2,2,2,2,2,4,6,8,10), pch=19, bty='n')
 
 # Select objects to pass to jags 
 ############################################################################################
@@ -291,6 +392,41 @@ data.pass.bf = list("d13Cbf.data" = d13Cbf.data,
                     "n.d13Cbf" = n.d13Cbf,
                     "bf.nsb.m" = bf.nsb.m,
                     "bf.nsb.sd" = bf.nsb.sd)
+
+data.pass.pf = list("d13Cpf.data" = d13Cpf.data,   
+                    "ai.d13Cpf" = ai.d13Cpf,
+                    "ri.d13Cpf" = ri.d13Cpf,
+                    "n.d13Cpf" = n.d13Cpf,
+                    "pf.nsb.m" = pf.nsb.m,
+                    "pf.nsb.sd" = pf.nsb.sd)
+
+data.pass.brach = list("d13Cbrach.data" = d13Cbrach.data,   
+                    "ai.d13Cbrach" = ai.d13Cbrach,
+                    "ri.d13Cbrach" = ri.d13Cbrach,
+                    "n.d13Cbrach" = n.d13Cbrach,
+                    "brach.nsb.m" = brach.nsb.m,
+                    "brach.nsb.sd" = brach.nsb.sd)
+
+data.pass.bivalve = list("d13Cbivalve.data" = d13Cbivalve.data,   
+                    "ai.d13Cbivalve" = ai.d13Cbivalve,
+                    "ri.d13Cbivalve" = ri.d13Cbivalve,
+                    "n.d13Cbivalve" = n.d13Cbivalve,
+                    "bivalve.nsb.m" = bivalve.nsb.m,
+                    "bivalve.nsb.sd" = bivalve.nsb.sd)
+
+data.pass.amm = list("d13Camm.data" = d13Camm.data,   
+                    "ai.d13Camm" = ai.d13Camm,
+                    "ri.d13Camm" = ri.d13Camm,
+                    "n.d13Camm" = n.d13Camm,
+                    "amm.nsb.m" = amm.nsb.m,
+                    "amm.nsb.sd" = amm.nsb.sd)
+
+data.pass.bel = list("d13Cbel.data" = d13Cbel.data,   
+                    "ai.d13Cbel" = ai.d13Cbel,
+                    "ri.d13Cbel" = ri.d13Cbel,
+                    "n.d13Cbel" = n.d13Cbel,
+                    "bel.nsb.m" = bel.nsb.m,
+                    "bel.nsb.sd" = bel.nsb.sd)
 
 data.pass.micrite = list("d13Cmicrite.data" = d13Cmicrite.data,
                       "ai.d13Cmicrite" = ai.d13Cmicrite,
@@ -321,25 +457,27 @@ data.pass.bulk_marg = list("d13Cbulk_marg.data" = d13Cbulk_marg.data,
                       "bulk_marg.nsb.sd" = bulk_marg.nsb.sd)
 
 
-data.pass <- c(data.pass, data.pass.bf, data.pass.micrite, data.pass.bulk, data.pass.bulk_sr, data.pass.bulk_marg)
+data.pass <- c(data.pass, data.pass.bf, data.pass.pf, data.pass.brach, data.pass.bivalve, data.pass.amm, 
+               data.pass.bel, data.pass.micrite, data.pass.bulk, data.pass.bulk_sr, data.pass.bulk_marg)
 
 ############################################################################################
 
 
 # Parameters to save as output 
 ############################################################################################
-parms = c("d13CO2", "GMST", "BWT", "tempC", "tempC_bot", "toff", "toff_bot", "d13Cbf", "d13Cbulk",
-        "d13Cbulk_sr", "d13Cbulk_marg", "d13Cmicrite", "bf.nsb_site", "bulk.nsb_site", 
-        "micrite.nsb_site", "bulk_sr.nsb_site", "bulk_marg.nsb_site")
+parms = c("d13CO2", "GMST", "BWT", "tempC", "tempC_bot", "toff", "toff_bot", "d13Cbf", "d13Cpf", 
+          "d13Cbrach", "d13Cbivalve", "d13Camm", "d13Cbel", "d13Cbulk", "d13Cbulk_sr", "d13Cbulk_marg", 
+          "d13Cmicrite", "bf.nsb_site", "pf.nsb_site", "brach.nsb_site", "bivalve.nsb_site", "amm.nsb_site", 
+          "bel.nsb_site", "bulk.nsb_site",  "micrite.nsb_site", "bulk_sr.nsb_site", "bulk_marg.nsb_site")
 
 ############################################################################################
 
 
 # Run the inversion using jags 
 ############################################################################################
-system.time({inv.out = jags.parallel(data = data.pass, model.file = "Phan/d13CO2_PSM_hyperspartialpool.R", 
+system.time({inv.out = jags.parallel(data = data.pass, model.file = "Phan/d13CO2_PSM_pp.R", 
                                      parameters.to.save = parms, inits = NULL, n.chains = 3, 
-                                     n.iter = 1e4, n.burnin = 3e3, n.thin = 1)})
+                                     n.iter = 1e3, n.burnin = 3e2, n.thin = 1)})
 
 
 ############################################################################################

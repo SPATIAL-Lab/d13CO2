@@ -1,4 +1,45 @@
 
+library(rgplates)
+library(ncdf4)
+
+comp <- read.csv("Phan/PhanData/assignLatLonSite/PhanCompUpdated_WithComponent.csv")
+
+## 1) Make sure age is in Ma
+##    (inspect and convert explicitly — adjust if your column is kyr or years)
+if (max(comp$age, na.rm = TRUE) > 2e3) {          # looks like years
+  comp$age <- comp$age / 1e6                      # years -> Ma
+} else if (max(comp$age, na.rm = TRUE) > 600) {   # looks like kyr
+  comp$age <- comp$age / 1e3                      # kyr -> Ma
+}
+
+## 2) Drop/clip invalid rows
+ok <- is.finite(comp$assigned.lon) & comp$assigned.lon >= -180 & comp$assigned.lon <= 180 &
+  is.finite(comp$assigned.lat) & comp$assigned.lat >=  -90 & comp$assigned.lat <=   90 &
+  is.finite(comp$age)          & comp$age >= 0 & comp$age <= 750                    # PALEOMAP range
+comp <- comp[ok, , drop = FALSE]
+
+## 3) Reconstruct with retries + small throttle to avoid hammering GWS
+paleocoord <- array(NA_real_, dim = c(nrow(comp), 2))
+
+for (i in seq_len(nrow(comp))) {
+  for (attempt in 1:3) {
+    res <- try(
+      reconstruct(x = c(comp$assigned.lon[i], comp$assigned.lat[i]),
+                  age = comp$age[i], model = "PALEOMAP"),
+      silent = TRUE
+    )
+    if (!inherits(res, "try-error") && all(is.finite(res))) {
+      paleocoord[i, ] <- res
+      break
+    } else {
+      Sys.sleep(0.2 * attempt)   # backoff on transient errors/timeouts
+    }
+  }
+}
+
+# optional: report any failures
+bad <- which(!is.finite(paleocoord[,1]) | !is.finite(paleocoord[,2]))
+if (length(bad)) message("Reconstruction failed for ", length(bad), " rows (after retries).")
 
 ######################################################################################
 # Extracts data from netCDF climate model output for Phanerozoic from Li et al. (2022) 
@@ -6,27 +47,27 @@
 # timeslices 
 ######################################################################################
 
-# Load libraries 
-library(rgplates)
-library(ncdf4)
-
-# Reconstruct paleocoordinates 
-comp <- read.csv("Phan/PhanData/assignLatLonSite/PhanCompUpdated.csv")
-paleocoord <- array(dim = c(length(comp$d13C), 2))
-
-system.time({
-  for (i in seq_along(comp$d13C)) {
-    paleocoord[i, ] <- reconstruct(x = c(comp$assigned.lon[i], comp$assigned.lat[i]), age = comp$age[i],
-                                   model = "MULLER2022") 
-  }
-})
+# # Load libraries 
+# library(rgplates)
+# library(ncdf4)
+# 
+# # Reconstruct paleocoordinates 
+# comp <- read.csv("Phan/PhanData/assignLatLonSite/PhanCompUpdated_WithComponent.csv")
+# paleocoord <- array(dim = c(length(comp$d13C), 2))
+# 
+# system.time({
+#   for (i in seq_along(comp$d13C)) {
+#     paleocoord[i, ] <- reconstruct(x = c(comp$assigned.lon[i], comp$assigned.lat[i]), age = comp$age[i],
+#                                    model = "PALEOMAP") 
+#   }
+# })
 
 comp$paleolon <- as.numeric(paleocoord[, 1])
 comp$paleolat <- as.numeric(paleocoord[, 2])
-write.csv(comp, file = "Phan/PhanData/PhanCompPaleocoord_MU22.csv")
+write.csv(comp, file = "Phan/PhanData/PhanCompPaleocoord_component.csv")
 
 # Extract temps from CESM netCDF
-comp <- read.csv("Phan/PhanData/PhanCompPaleocoord_MU22.csv")
+comp <- read.csv("Phan/PhanData/PhanCompPaleocoord_component.csv")
 ncin <- nc_open("Phan/PhanData/High_Resolution_Climate_Simulation_Dataset_540_Myr.nc")
 
 lon <- ncvar_get(ncin, "lon")
@@ -113,6 +154,6 @@ comp$GMST_PhanDA_lo <- PhanDA.lo
 comp$temp_offset <- temp_offset
 comp$temp_offset_PhanDA <- temp_offset_PhanDA
 
-write.csv(comp, "Phan/PhanData/PhanCompWithTemp_MU22.csv", row.names = FALSE)
+write.csv(comp, "Phan/PhanData/PhanCompWithTemp_component.csv", row.names = FALSE)
 
 

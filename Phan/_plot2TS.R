@@ -2,13 +2,13 @@
 
 # load mcmc objects
 
-load("Phan/chpc_output/ages_PhanDA.rda")
+load("Phan/chpc_output2/ages_PALEOMAP.rda")
 
-load("Phan/chpc_output/inv.out_LiGMST.rda")
+load("Phan/chpc_output2/inv.out_LiGMST.rda")
 mcmcout_Li <- mcmcout
 rm(inv.out)
 
-load("Phan/chpc_output/inv.out_PhanDA.rda")
+load("Phan/chpc_output2/inv.out_PALEOMAP.rda")
 
 ###################################################################################################
 # d13CO2 posterior
@@ -86,13 +86,13 @@ plot(ages[10:483]/1e3, parm.med[10:483], type="l", xlab = "age (Ma)",
      ylab = parm.label, xlim = rev(range(ages[10:549]/1e3)), ylim = c(min(parm.q025[10:483]),max(parm.q975[10:483])))
 grid(nx = NA, ny = NULL) 
 polygon(x = c(ages[10:483]/1e3, rev(ages[10:483]/1e3)), y = c(parm.q025[10:483], rev(parm.q975[10:483])), 
-        col =  adjustcolor("dodgerblue", alpha.f = 0.40), border = NA)
-lines(ages[10:483]/1e3, parm.med[10:483], col="dodgerblue", lwd=1)
+        col =  adjustcolor("#1B9E77", alpha.f = 0.35), border = NA)
+lines(ages[10:483]/1e3, parm.med[10:483], col="#1B9E77", lwd=1)
 polygon(x = c(ages[10:483]/1e3, rev(ages[10:483]/1e3)), y = c(parm.q025_saved[10:483], rev(parm.q975_saved[10:483])), 
-        col = adjustcolor("black", alpha.f = 0.30), border = NA)
-lines(ages[10:483]/1e3, parm.med_saved[10:483], col="black", lwd=1)
-legend("topright", legend = c("PhanDA GMST", "Li22 GMST"), fill = c(adjustcolor("dodgerblue", alpha.f=0.40), 
-                                                                    adjustcolor("black", alpha.f=0.30)), border = NA, bty="n")
+        col = adjustcolor("#7570B3", alpha.f = 0.35), border = NA)
+lines(ages[10:483]/1e3, parm.med_saved[10:483], col="#7570B3", lwd=1)
+legend("topright", legend = c("PhanDA GMST", "Li22 GMST"), fill = c(adjustcolor("#1B9E77", alpha.f=0.35), 
+                                                                    adjustcolor("#7570B3", alpha.f=0.35)), border = NA, bty="n")
 
 
 
@@ -150,17 +150,17 @@ legend("topright", legend = c("uniform d13Ca prior", "normal d13Ca prior"), fill
 ###################################################################################################
 # sensitivity test influence of paleogeographic model
 
-load("Phan/chpc_output/ages_PhanDA.rda")
+load("Phan/chpc_output2/ages_PALEOMAP.rda")
 
-load("Phan/chpc_output/inv.out_PhanDA.rda")
+load("Phan/chpc_output2/inv.out_PALEOMAP.rda")
 mcmcout_Sc16 <- inv.out
 rm(inv.out)
 
-load("Phan/chpc_output/inv.out_TC17.rda")
+load("Phan/chpc_output2/inv.out_TorsvikCocks2017.rda")
 mcmcout_TC17 <- inv.out
 rm(inv.out)
 
-load("Phan/chpc_output/inv.out_MU22.rda")
+load("Phan/chpc_output2/inv.out_MERDITH2021.rda")
 mcmcout_MU22 <- inv.out
 rm(inv.out)
 

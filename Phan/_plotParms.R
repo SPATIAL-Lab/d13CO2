@@ -5,6 +5,10 @@
 ### INPUT ###
 ############################################################################################
 ### MCMC object from MCMC inversion output 
+load("Phan/chpc_output2/inv.out_PALEOMAP.rda")
+load("Phan/chpc_output2/sites_PALEOMAP.rda")
+load("Phan/chpc_output2/prox.in_PALEOMAP.rda")
+load("Phan/chpc_output2/ages_PALEOMAP.rda")
 mcmcout <- inv.out
 
 
@@ -29,7 +33,7 @@ print(sites)
 
 ### PLOT THE RAW d13C DATA, COLORED BY SITE ###
 ############################################################################################
-plot(prox.in$age, prox.in$d13C, col=site.index, xlim = c(age.max, age.min), cex = 0.3)
+plot(prox.in$age, prox.in$d13C, col=prox.in$site.index, xlim = c(max(prox.in$age), min(prox.in$age)), cex = 0.3)
 
 ############################################################################################
 

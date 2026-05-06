@@ -24,6 +24,7 @@
 /Phan/PhanData/PhanCompPaleocoord_from_export.csv
 /Phan/PhanData/phacomp_paleocoord.csv
 /TectonicModels
+/lateCenozoic
 
 # Example code in package build process
 *-Ex.R
@@ -67,3 +68,4 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 .DS_Store
+.positai

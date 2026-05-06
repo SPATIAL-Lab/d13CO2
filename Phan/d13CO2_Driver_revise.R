@@ -25,17 +25,20 @@ GMST_model <- "PhanDA"
 # they do not provide uncertainty estimates
 GMST_sd_Scotese21 <- 5
 
-# select 'PhanDA' for Li22 MAT minus PhanDA GMST; select 'Li22' for Li22 MAT minus Scotese21 GMST (same as Li22 GMST); 
+# select 'PhanDA' for Li22 MAT minus PhanDA GMST; 
+# select 'Li22' for Li22 MAT minus Scotese21 GMST (same as Li22 GMST); 
 temp_offset_model <- "Li22" 
 
-# uniform standard deviation applied to all surface temperature site offset values - no uncertainty in Scotese21 estimates
+# uniform standard deviation applied to all surface temperature site offset values - 
+# no uncertainty in Scotese21 estimates
 toff_sd_uniform <- 2 
 
 # uniform standard deviation applied to all bottom temperature site offset values 
 toff_sd_uniform_bot <- 1 
 
 
-# non-secular bias of archival d13C from high-fidelity (true) value (per mille), standard deviation w/ fixed mean = 0 
+# residual offset in non-secular bias of archival d13C from high-fidelity (true) value (per mille), 
+# standard deviation w/ fixed mean = 0 
 
 # Benthic forams
 bf.nsb.m <- 0
@@ -84,16 +87,12 @@ bulk_marg.nsb.sd <- 0.75
 ############################################################################################
 
 # load proxy data
-# prox.in <- as.data.frame(read.csv(file = "Phan/PhanData/PhanCompWithTemp.csv"))
-# prox.in <- cbind(prox.in[,3:18], rep(x = toff_sd_uniform, times = nrow(prox.in)))
-# names(prox.in) <- c("age", "d13C", "source", "site", "lat", "lon", "category", 
-#                     "paleolon","paleolat", "MAT", "GMST_Scotese21", "GMST_PhanDA", "GMST_PhanDA_hi",
-#                     "GMST_PhanDA_lo", "temp_offset", "temp_offset_PhanDA", "temp_offset_sd")
 prox.in <- as.data.frame(read.csv(file = "Phan/PhanData/PhanCompWithTemp_PALEOMAP.csv"))
 prox.in <- cbind(prox.in[,1:7], prox.in[,9:10], prox.in[,21:27],rep(x = toff_sd_uniform, times = nrow(prox.in)))
 names(prox.in) <- c("age", "d13C", "source", "site", "lat", "lon", "category", 
                     "paleolon","paleolat", "MAT", "GMST_Scotese21", "GMST_PhanDA", "GMST_PhanDA_hi",
                     "GMST_PhanDA_lo", "temp_offset", "temp_offset_PhanDA", "temp_offset_sd")
+
 # age index proxy data (in kyrs)
 prox.in$age <- prox.in$age*1e3
 prox.in <- prox.in[prox.in$age >= (age.min) & prox.in$age <= (age.max),]
@@ -476,7 +475,7 @@ parms = c("d13CO2", "GMST", "BWT", "tempC", "tempC_bot", "toff", "toff_bot", "d1
 
 # Run the inversion using jags 
 ############################################################################################
-system.time({inv.out = jags.parallel(data = data.pass, model.file = "Phan/d13CO2_PSM_pp.R", 
+system.time({inv.out = jags.parallel(data = data.pass, model.file = "Phan/d13CO2_PSM_revise.R", 
                                      parameters.to.save = parms, inits = NULL, n.chains = 6, 
                                      n.iter = 3e3, n.burnin = 1e3, n.thin = 5)})
 

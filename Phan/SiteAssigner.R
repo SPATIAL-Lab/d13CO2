@@ -8,7 +8,7 @@ library(openxlsx)
 # PALEOZOIC DATA
 ###################################################################################
 
-# Define the path to your Excel file
+# Define the path to Excel file
 file_path <- "Phan/PhanData/assignLatLonSite/paleozoicAssignSites.xlsx"
 
 # Read data from Sheet 1 and Sheet 2

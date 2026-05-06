@@ -1,12 +1,13 @@
 
 library(ncdf4)
 
-# Extract temps from CESM netCDF
+# read in paleocoordinates from compilation
 comp <- read.csv("Phan/PhanData/phacomp_paleocoord.csv")
 paleolon <- comp$plng_CAO2024
 paleolat <- comp$plat_CAO2024
 
 
+# Extract temps from CESM netCDF
 ncin <- nc_open("Phan/PhanData/High_Resolution_Climate_Simulation_Dataset_540_Myr.nc")
 
 lon <- ncvar_get(ncin, "lon")

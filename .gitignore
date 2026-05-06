@@ -9,21 +9,9 @@
 # User-specific files
 .Ruserdata
 .DS_Store
-/working/
-/saved_env/
-/saved_figs/
-/Phan/chcp/
-/Phan/chpc_output/
-/Phan/chpc_output2/
-/Phan/chpc_output3/
-/Phan/PhanData/High_Resolution_Climate_Simulation_Dataset_540_Myr.nc
-/Phan/PhanData/PhanCompWithTemp.csv
-/Phan/PhanData/PhanCompPaleocoord_MU22.csv
-/Phan/PhanData/PhanCompPaleocoord_TC17.csv
-/Phan/PhanData/PhanCompPaleocoord_local.csv
-/Phan/PhanData/PhanCompPaleocoord_from_export.csv
-/Phan/PhanData/phacomp_paleocoord.csv
-/TectonicModels
+/output/
+/legacy/
+/data/raw/High_Resolution_Climate_Simulation_Dataset_540_Myr.nc
 /lateCenozoic
 
 # Example code in package build process

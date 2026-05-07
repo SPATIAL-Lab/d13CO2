@@ -9,7 +9,7 @@ library(openxlsx)
 ###################################################################################
 
 # Define the path to Excel file
-file_path <- "data/datacomp/paleozoicAssignSites.xlsx"
+file_path <- "data/compilation/paleozoicAssignSites.xlsx"
 
 # Read data from Sheet 1 and Sheet 2
 sheet1 <- read_excel(file_path, sheet = "paleozoic comp")
@@ -21,14 +21,14 @@ merged_data_paleozoic <- sheet1 %>%
               select(study, `assigned location`, `assigned lat`, `assigned lon`, category),
             by = c("source" = "study", "assigned location" = "assigned location"))
 
-write.xlsx(merged_data_paleozoic, file = "data/datacomp/updated_paleozoicAssignSites.xlsx", sheetName = "paleozoic comp updated", overwrite = TRUE)
+write.xlsx(merged_data_paleozoic, file = "data/compilation/updated_paleozoicAssignSites.xlsx", sheetName = "paleozoic comp updated", overwrite = TRUE)
 
 
 
 # NON-PALEOZOIC DATA
 ###################################################################################
 
-file_path <- "data/datacomp/nonpaleozoicAssignSites.xlsx"
+file_path <- "data/compilation/nonpaleozoicAssignSites.xlsx"
 
 # Read the two sheets
 comp_data <- read_excel(file_path, sheet = "nonpaleozoic_comp")
@@ -40,7 +40,7 @@ merged_data_nonpaleozoic <- comp_data %>%
               select(study, `assigned location`, `assigned lat`, `assigned lon`, category),
             by = c("source" = "study", "assigned location" = "assigned location"))
 
-write.xlsx(merged_data_nonpaleozoic, file = "data/datacomp/updated_nonpaleozoicAssignSites.xlsx", sheetName = "nonpaleozoic_comp", overwrite = TRUE)
+write.xlsx(merged_data_nonpaleozoic, file = "data/compilation/updated_nonpaleozoicAssignSites.xlsx", sheetName = "nonpaleozoic_comp", overwrite = TRUE)
 
 
 # COMBINE
@@ -59,6 +59,6 @@ combined <- rbind(df1, df2)
 PhanCompUpdated <- as.matrix(combined)
 
 # Save the result to a new Excel file
-write.csv(PhanCompUpdated, file = "data/datacomp/PhanCompUpdated_bulk.csv")
+write.csv(PhanCompUpdated, file = "data/compilation/PhanCompUpdated_bulk.csv")
 
 

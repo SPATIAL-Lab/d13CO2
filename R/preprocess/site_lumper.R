@@ -110,5 +110,5 @@ all_sites_culled <- replace_string(all_sites_culled, old = "DSDP 390", new = "39
 unique(sort(all_sites_culled))
 
 
-write.csv(all_sites_culled, file = "data/cache/all_sites_culled.csv")
+write.csv(all_sites_culled, file = "data/compilation/all_sites_culled.csv")
 

@@ -185,6 +185,9 @@ model {
   d13CO2_sigma ~ dunif(0, 0.1)         
   d13CO2_tau <- 1 / (d13CO2_sigma^2)
   
+  # Coupling between GMST and BWT evolution
+  BWT_GMST_beta ~ dunif(0, 1)
+  
   # Initial states 
   GMST[1] ~ dnorm(GMST.obs[1], 1/GMST.sd[1]^2)
   BWT[1] ~ dnorm(BWT.obs[1],  1/BWT.sd[1]^2)
@@ -194,7 +197,7 @@ model {
   for (i in 2:n.steps){
     d13CO2[i] ~ dnorm(d13CO2[i-1], d13CO2_tau)
     GMST[i] ~ dnorm(GMST[i-1], GMST_tau)
-    BWT[i] ~ dnorm(BWT[i-1], BWT_tau)
+    BWT[i] ~ dnorm(BWT[i-1] + BWT_GMST_beta * (GMST[i] - GMST[i-1]), BWT_tau)
   }
   
   # Observation equations (these impose the evaluation against prescribed means)

@@ -13,6 +13,7 @@
 /legacy/
 /data/raw/High_Resolution_Climate_Simulation_Dataset_540_Myr.nc
 /lateCenozoic
+/R/plot/legacy
 
 # Example code in package build process
 *-Ex.R

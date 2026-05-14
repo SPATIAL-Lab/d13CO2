@@ -465,10 +465,11 @@ data.pass <- c(data.pass, data.pass.bf, data.pass.pf, data.pass.brach, data.pass
 
 # Parameters to save as output 
 ############################################################################################
-parms = c("d13CO2", "GMST", "BWT", "tempC", "tempC_bot", "toff", "toff_bot", "d13Cbf", "d13Cpf", 
+parms = c("d13CO2", "GMST", "BWT", "BWT_GMST_beta", "tempC", "tempC_bot", "toff", "toff_bot", "d13Cbf", "d13Cpf", 
           "d13Cbrach", "d13Cbivalve", "d13Camm", "d13Cbel", "d13Cbulk", "d13Cbulk_sr", "d13Cbulk_marg", 
           "d13Cmicrite", "bf.nsb_site", "pf.nsb_site", "brach.nsb_site", "bivalve.nsb_site", "amm.nsb_site", 
-          "bel.nsb_site", "bulk.nsb_site",  "micrite.nsb_site", "bulk_sr.nsb_site", "bulk_marg.nsb_site")
+          "bel.nsb_site", "bulk.nsb_site",  "micrite.nsb_site", "bulk_sr.nsb_site", "bulk_marg.nsb_site", "Abf", 
+          "Asurf")
 
 ############################################################################################
 
@@ -477,7 +478,7 @@ parms = c("d13CO2", "GMST", "BWT", "tempC", "tempC_bot", "toff", "toff_bot", "d1
 ############################################################################################
 system.time({inv.out = jags.parallel(data = data.pass, model.file = "R/model/d13CO2_PSM.R", 
                                      parameters.to.save = parms, inits = NULL, n.chains = 6, 
-                                     n.iter = 3e3, n.burnin = 1e3, n.thin = 5)})
+                                     n.iter = 1e5, n.burnin = 3e4, n.thin = 100)})
 
 
 ############################################################################################

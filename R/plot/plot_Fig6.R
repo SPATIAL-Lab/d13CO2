@@ -12,8 +12,9 @@
 # inv.out
 # ages
 
-load("output/model_runs/chpc_260511/output/inv.out_Cenozoic.rda")
-load("output/model_runs/chpc_260511/output/ages_Cenozoic.rda")
+if (!exists("model.output.root", inherits = FALSE)) model.output.root <- "output/model_runs/final_archiveblock_3M"
+if (!exists("figure.output.root", inherits = FALSE)) figure.output.root <- "output/figures"
+load(file.path(model.output.root, "inv_out_cenozoic.rda"))
 
 ####################################################################################################
 ####################################################################################################
@@ -42,6 +43,14 @@ dat$reference <- as.character(dat$reference)
 
 dat <- dat[complete.cases(dat[, c("age", "d13C", "category")]), ]
 dat <- dat[dat$age >= 0 & dat$age <= age.max, ]
+
+# Tipple et al. (2010) Figure 4 benthic-based atmospheric d13C reconstruction
+tipple.raw <- read.csv("data/processed/Tipple2010_Fig4_benthic_d13CO2.csv",
+                       stringsAsFactors = FALSE)
+tipple <- data.frame(age = as.numeric(tipple.raw$age_Ma),
+                     d13Ca = as.numeric(tipple.raw$d13CO2_permil))
+tipple <- tipple[is.finite(tipple$age) & is.finite(tipple$d13Ca), ]
+tipple <- tipple[order(tipple$age), ]
 
 
 ####################################################################################################
@@ -145,6 +154,11 @@ dat$d13C_atm <- approx(
 )$y
 
 dat$Delta <- dat$d13C - dat$d13C_atm
+dat$d13C_atm_Tipple <- approx(tipple$age, tipple$d13Ca, xout = dat$age, rule = 1)$y
+dat$Delta_Tipple <- dat$d13C - dat$d13C_atm_Tipple
+dat$age_bin <- floor(dat$age + 0.5)
+tipple_curve <- aggregate(Delta_Tipple ~ age_bin, data = dat, FUN = mean, na.rm = TRUE)
+tipple_curve <- tipple_curve[is.finite(tipple_curve$Delta_Tipple), ]
 
 
 ####################################################################################################
@@ -219,10 +233,10 @@ panel_lab <- function(lab, xlim, ylim) {
 ####################################################################################################
 # Plot
 ####################################################################################################
-quartz(width = 9, height = 12)
+dir.create(figure.output.root, recursive = TRUE, showWarnings = FALSE)
+cairo_pdf(file.path(figure.output.root, "Figure6.pdf"), width = 5.388889, height = 6.555556)
 
 op <- par(no.readonly = TRUE)
-on.exit(par(op), add = TRUE)
 
 layout(matrix(1:5, ncol = 1), heights = c(1, 1, 1, 1, 1))
 
@@ -355,7 +369,7 @@ panel_lab("b.", xlim, ylim_b)
 ####################################################################################################
 par(mar = c(0.4, 5.2, 0.2, 5.2))
 
-ylim_c <- range(c(dat$Delta, Delta_C3, Delta_wsC3, Delta_C4), na.rm = TRUE)
+ylim_c <- range(c(dat$Delta, tipple_curve$Delta_Tipple, Delta_C3, Delta_wsC3, Delta_C4), na.rm = TRUE)
 y_major_c <- pretty(ylim_c)
 y_minor_c <- seq(floor(min(ylim_c, na.rm = TRUE)),
                  ceiling(max(ylim_c, na.rm = TRUE)),
@@ -370,6 +384,9 @@ plot(
   ylab = "",
   axes = FALSE
 )
+
+lines(tipple_curve$age_bin, tipple_curve$Delta_Tipple,
+      col = gray(0.55), lwd = 2.2)
 
 abline(h = Delta_C3, lty = 2, lwd = 1.15, col = gray(0.25))
 abline(h = Delta_wsC3, lty = 2, lwd = 1.15, col = gray(0.25))
@@ -413,6 +430,9 @@ for (i in seq_along(cats)) {
     cex = 1.1
   )
 }
+
+legend("bottomleft", legend = "Tipple et al. (2010) Fig. 4-based",
+       col = gray(0.45), lwd = 2.2, bty = "n", cex = 0.7)
 
 axis(1, at = x_major, labels = FALSE, tck = major_tick, cex.axis = cex_axis)
 axis(2, at = y_major_c, las = 1, tck = major_tick, cex.axis = cex_axis)
@@ -538,3 +558,5 @@ mtext("Age (Ma)", side = 1, line = 2.4, cex = cex_lab)
 mtext(ylab_e, side = 4, line = 3, cex = cex_lab)
 
 panel_lab("e.", xlim, ylim_e)
+
+invisible(dev.off())

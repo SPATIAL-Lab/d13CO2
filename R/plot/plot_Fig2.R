@@ -12,9 +12,9 @@
 # ages
 # prox.in
 
-load("output/model_runs/chpc_260511/output/inv.out_main.rda")
-load("output/model_runs/chpc_260511/output/ages_main.rda")
-load("output/model_runs/chpc_260511/output/prox.in_main.rda")
+if (!exists("model.output.root", inherits = FALSE)) model.output.root <- "output/model_runs/final_archiveblock_3M"
+if (!exists("figure.output.root", inherits = FALSE)) figure.output.root <- "output/figures"
+load(file.path(model.output.root, "inv_out_main.rda"))
 
 ####################################################################################################
 ####################################################################################################
@@ -35,14 +35,15 @@ n_draws <- min(100, ncol(d13CO2_draws))
 ix_draws <- round(seq(1, ncol(d13CO2_draws), length.out = n_draws))
 
 ages_Ma <- ages / 1000
+prox_age_Ma <- if (max(prox.in$age, na.rm = TRUE) > 1000) prox.in$age/1000 else prox.in$age
 
 ####################################################################################################
 # Layout 
 ####################################################################################################
-quartz(width = 11, height = 8.5)
+dir.create(figure.output.root, recursive = TRUE, showWarnings = FALSE)
+cairo_pdf(file.path(figure.output.root, "Figure2.pdf"), width = 6.560629, height = 5.069767)
 
 op <- par(no.readonly = TRUE)
-on.exit(par(op), add = TRUE)
 
 layout(matrix(1:4, ncol = 1), heights = c(3.8, 3.6, 0.9, 1.2))
 par(xaxs = "i", yaxs = "i")
@@ -57,6 +58,12 @@ y_side_top <- 2
 y_lab_top <- expression(delta^13*C[CO[2]]~"(‰ VPDB)")
 y_side_bot <- 4
 y_lab_bot <- expression(delta^13*C[carb]~"(‰ VPDB)")
+
+panel_lab <- function(lab) {
+  usr <- par("usr")
+  text(usr[1] - 0.025*diff(range(usr[1:2])), usr[4] - 0.06*diff(usr[3:4]),
+       lab, adj = c(0, 1), font = 2)
+}
 
 
 ####################################################################################################
@@ -83,6 +90,7 @@ axis(3, at = ticks10, labels = FALSE)
 axis(3, at = ticks50, labels = ticks50, tick = FALSE) 
 axis(y_side_top)
 mtext(y_lab_top, side = y_side_top, line = 2.8)
+panel_lab("a.")
 
 
 ####################################################################################################
@@ -125,8 +133,8 @@ prox.in$category_rec[prox.in$category_rec == "Planktonic foraminifera"] <- "plan
 yl2 <- range(prox.in$d13C[ok], na.rm = TRUE)
 yl2[1] <- -10
 
-xlim_raw <- c(max(prox.in$age, na.rm = TRUE),
-              min(prox.in$age, na.rm = TRUE))
+xlim_raw <- c(max(prox_age_Ma, na.rm = TRUE),
+              min(prox_age_Ma, na.rm = TRUE))
 
 plot(NA, xlim = xlim_raw, ylim = yl2, xaxt = "n", yaxt = "n", xlab = "", ylab = "")
 grid(nx = NA, ny = NULL)
@@ -190,11 +198,14 @@ if (all(c("planktonic foraminifera", "ammonite") %in% names(cat_pch_map))) {
 pch_pts <- cat_pch_map[cat_vec]
 
 # Plot points (colored by lat/lon, shaped by recoded category)
-points(prox.in$age[ok], prox.in$d13C[ok],
-       col = col_pts, cex = 0.3, pch = pch_pts)
+points(prox_age_Ma[ok], prox.in$d13C[ok],
+       col = "black", cex = 0.34, pch = pch_pts, lwd = 0.25)
+points(prox_age_Ma[ok], prox.in$d13C[ok],
+       col = col_pts, cex = 0.29, pch = pch_pts, lwd = 0.2)
 
 axis(y_side_bot)
 mtext(y_lab_bot, side = y_side_bot, line = 2.8)
+panel_lab("b.")
 
 # 2D legend for paleolat / paleolon mapping 
 
@@ -282,4 +293,4 @@ axis(1, at = ticks50, labels = ticks50, tick = FALSE) # labeled every 50 Ma
 
 mtext("Age (Ma)", side = 1, line = 2.6)
 
-
+invisible(dev.off())

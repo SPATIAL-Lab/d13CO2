@@ -1,200 +1,109 @@
-
-
 ####################################################################################################
-####################################################################################################
-# Script to generate Figure 3 in the manuscript - wavelet analysis for d13Ca
-
-# d13CO2 (with draws), raw d13C colored by paleolat/paleolon + symbol by category; GSA period strip
-# and shared bottom x-axis 
-
-# Assumes objects already exist in the environment:
-# inv.out
-# ages
-
-load("output/model_runs/chpc_260511/output/inv.out_main.rda")
-load("output/model_runs/chpc_260511/output/ages_main.rda")
-
-####################################################################################################
-####################################################################################################
+# Figure 3: wavelet analysis of atmospheric d13C
 
 library(biwavelet)
 
-############################################################
-# Extract d13Ca
-############################################################
+if (!exists("model.output.root", inherits = FALSE)) model.output.root <- "output/model_runs/final_archiveblock_3M"
+if (!exists("figure.output.root", inherits = FALSE)) figure.output.root <- "output/figures"
 
-d13CO2_draws <- as.matrix(inv.out$BUGSoutput$sims.list$d13CO2)
+model.file <- file.path(model.output.root, "inv_out_main.rda")
+figure.file <- file.path(figure.output.root, "Figure3.pdf")
 
-if (ncol(d13CO2_draws) == length(ages)) {
-  d13CO2_draws <- t(d13CO2_draws)
+load(model.file)
+
+keep <- ages >= 0 & ages <= 540000
+age <- ages[keep]/1000
+d13CO2.draws <- inv.out$BUGSoutput$sims.list$d13CO2
+
+if (ncol(d13CO2.draws) == length(ages)) {
+  d13CO2.draws <- d13CO2.draws[, keep, drop = FALSE]
+} else if (nrow(d13CO2.draws) == length(ages)) {
+  d13CO2.draws <- t(d13CO2.draws[keep, , drop = FALSE])
+} else {
+  stop("The atmospheric d13C draws do not match the age vector")
 }
 
-d13CO2_med <- apply(d13CO2_draws, 1, median)
+d13CO2.median <- apply(d13CO2.draws, 2, median)
+o <- order(age)
+wavelet.data <- cbind(age[o], d13CO2.median[o])
 
-dat <- data.frame(
-  time_Myr = ages / 1000,
-  d13Ca = d13CO2_med
-)
-
-dat <- dat[order(dat$time_Myr), ]
-
-dt <- mean(diff(dat$time_Myr))
-wt_input <- cbind(dat$time_Myr, dat$d13Ca)
-
-############################################################
-# Wavelet setup
-############################################################
-
-s0 <- 2 * dt
+dt <- mean(diff(wavelet.data[, 1]))
+s0 <- 2*dt
 dj <- 0.1
-max_period <- diff(range(dat$time_Myr)) / 2
-J1 <- floor(log2(max_period / s0) / dj)
+J1 <- floor(log2((diff(range(wavelet.data[, 1]))/2)/s0)/dj)
 
-wt_res <- wt(wt_input,
-             dj = dj,
-             s0 = s0,
-             J1 = J1,
-             mother = "morlet",
-             pad = TRUE,
-             do.sig = TRUE)
+wavelet.result <- wt(wavelet.data, dj = dj, s0 = s0, J1 = J1,
+                     mother = "morlet", pad = TRUE, do.sig = TRUE,
+                     sig.level = 0.95)
 
-############################################################
-# Periods and global spectrum
-############################################################
+period <- wavelet.result$period
+global.power <- rowMeans(wavelet.result$power, na.rm = TRUE)
+global.signif <- wt.sig(wavelet.data, dt = dt, scale = wavelet.result$scale,
+                        sig.test = 1, sig.level = 0.95,
+                        dof = nrow(wavelet.data), mother = "morlet",
+                        sigma2 = var(wavelet.data[, 2]))$signif
 
-target_periods <- c(45, 60, 70, 80, 180)
+set.seed(26080703)
+n.wavelet.draws <- min(400L, nrow(d13CO2.draws))
+draw.rows <- sort(sample(seq_len(nrow(d13CO2.draws)), n.wavelet.draws))
 
-periods <- wt_res$period
-global_power <- apply(wt_res$power, 1, mean, na.rm = TRUE)
+posterior.power <- vapply(draw.rows, function(i) {
+  z <- cbind(age[o], d13CO2.draws[i, o])
+  w <- wt(z, dj = dj, s0 = s0, J1 = J1, mother = "morlet",
+          pad = TRUE, do.sig = FALSE)
+  rowMeans(w$power, na.rm = TRUE)
+}, numeric(length(period)))
 
-band_5_200 <- which(periods >= 5 & periods <= 200)
-thresh <- quantile(global_power[band_5_200], 0.90, na.rm = TRUE)
+power.median <- apply(posterior.power, 1, median)
+power.lower <- apply(posterior.power, 1, quantile, 0.025)
+power.upper <- apply(posterior.power, 1, quantile, 0.975)
 
-target_idx <- sapply(target_periods, function(p) {
-  which.min(abs(periods - p))
-})
+peak.range <- period >= 55 & period <= 75
+peak.index <- which(peak.range)[which.max(power.median[peak.range])]
+peak.period <- period[peak.index]
 
-cols <- c("red", "orange", "darkgreen", "purple", "brown")
+dir.create(dirname(figure.file), recursive = TRUE, showWarnings = FALSE)
+pdf(figure.file, width = 7.2, height = 8.5)
 
-############################################################
-# Plot 1: Wavelet power spectrum + global wavelet spectrum
-############################################################
+op <- par(mfrow = c(2, 1), mar = c(4, 4.5, 1.5, 1.5))
 
-quartz(width = 8.5, height = 9)
+plot(wavelet.result, type = "power", xlab = "Age (Ma)",
+     ylab = "Period (Myr)", main = "", plot.coi = TRUE,
+     plot.sig = TRUE, lwd.sig = 1.2, col.sig = "white")
+abline(h = log2(peak.period), col = "white", lty = 2, lwd = 1.2)
+text(max(wavelet.data[, 1]), log2(peak.period),
+     paste0(round(peak.period, 1), " Myr"), pos = 2,
+     col = "white", font = 2)
+mtext("A", side = 3, adj = 0, line = 0.2, font = 2)
 
-op <- par(no.readonly = TRUE)
-on.exit(par(op), add = TRUE)
+x.range <- range(c(0, power.lower, power.upper, global.power,
+                   global.signif[peak.index]), finite = TRUE)
+x.range[2] <- x.range[2]*1.08
+plot(power.median, period, type = "n", log = "y", ylim = c(5, 200),
+     xlim = x.range, xlab = "Global wavelet power", ylab = "Period (Myr)")
+polygon(c(power.lower, rev(power.upper)), c(period, rev(period)),
+        col = adjustcolor("#0072B2", alpha.f = 0.20), border = NA)
+lines(power.median, period, col = "#0072B2", lwd = 2)
+lines(global.power, period, col = "black", lwd = 1.2)
+abline(v = global.signif[peak.index], col = "grey40", lty = 2, lwd = 1.2)
+segments(global.signif[peak.index], peak.period,
+         power.median[peak.index], peak.period,
+         col = "#0072B2", lwd = 2)
+points(power.median[peak.index], peak.period, pch = 19,
+       col = "#0072B2", cex = 1.1)
+text(power.median[peak.index], peak.period,
+     paste0(round(peak.period, 1), " Myr"), pos = 4, font = 2)
+legend("bottomright",
+       c("Posterior median", "95% posterior interval",
+         "Median-series power", "95% threshold at 66.1 Myr"),
+       col = c("#0072B2", adjustcolor("#0072B2", alpha.f = 0.20),
+               "black", "grey40"),
+       lwd = c(2, 8, 1.2, 1.2), lty = c(1, 1, 1, 2), bty = "n", cex = 0.82)
+mtext("B", side = 3, adj = 0, line = 0.2, font = 2)
 
-par(mfrow = c(2, 1), mar = c(4, 4.5, 3, 2))
+par(op)
+dev.off()
 
-############################################################
-# Wavelet power spectrum
-############################################################
-
-plot(wt_res,
-     type = "power",
-     main = "Wavelet power spectrum",
-     xlab = "Age (Ma)",
-     ylab = "Period (Myr)")
-
-usr <- par("usr")
-
-for (p in target_periods) {
-  half_width <- if (p >= 150) 10 else 5
-  
-  rect(usr[1], p - half_width, usr[2], p + half_width,
-       col = adjustcolor("white", 0.15), border = NA)
-  
-  segments(usr[1], p, usr[2], p,
-           col = adjustcolor("white", 0.7), lty = 2, lwd = 1.5)
-}
-
-text(usr[2], 60, "60 Myr", pos = 2, xpd = NA, cex = 1.0, font = 2, col = "white")
-text(usr[2], 180, "180 Myr", pos = 2, xpd = NA, cex = 1.0, font = 2, col = "white")
-
-############################################################
-# Global wavelet spectrum
-############################################################
-
-plot(global_power, periods, type = "l",
-     xlab = "Global wavelet power",
-     ylab = "Period (Myr)",
-     main = "Global wavelet spectrum",
-     log = "y",
-     lwd = 1.5)
-
-grid(col = "grey85", lty = "dotted")
-
-usr <- par("usr")
-
-for (p in target_periods) {
-  half_width <- if (p >= 150) 10 else 5
-  
-  rect(usr[1], p - half_width, usr[2], p + half_width,
-       col = adjustcolor("grey", 0.12), border = NA)
-}
-
-lines(global_power, periods, lwd = 1.5)
-abline(v = thresh, col = "blue", lty = 2, lwd = 1.5)
-
-for (i in seq_along(target_periods)) {
-  idx <- target_idx[i]
-  
-  points(global_power[idx], periods[idx],
-         pch = 19, col = cols[i], cex = if (target_periods[i] == 60) 1.4 else 1.1)
-  
-  text(global_power[idx], periods[idx],
-       labels = paste0(target_periods[i], " Myr"),
-       pos = 4, col = cols[i], cex = 0.8, font = if (target_periods[i] == 60) 2 else 1)
-}
-
-
-############################################################
-# Plot 2: d13Ca time series + power at selected periods
-############################################################
-
-quartz(width = 8.5, height = 9)
-
-par(mfrow = c(2, 1), mar = c(4, 4.5, 3, 2))
-
-############################################################
-# Time series
-############################################################
-
-plot(dat$time_Myr, dat$d13Ca, type = "l",
-     xlab = "Age (Ma)",
-     ylab = expression(delta^13*C[a]~"(‰ VPDB)"),
-     main = expression(delta^13*C[a]*" time series"),
-     lwd = 1.5)
-
-grid(col = "grey85", lty = "dotted")
-
-############################################################
-# Power at target periods
-############################################################
-
-ridge_power <- lapply(target_idx, function(k) {
-  wt_res$power[k, ]
-})
-
-plot(dat$time_Myr, ridge_power[[1]], type = "l",
-     xlab = "Age (Ma)",
-     ylab = "Wavelet power",
-     main = "Power at selected periods",
-     lwd = 1.5,
-     col = cols[1])
-
-grid(col = "grey85", lty = "dotted")
-
-for (i in 2:length(target_periods)) {
-  lines(dat$time_Myr, ridge_power[[i]], col = cols[i], lwd = 1.3)
-}
-
-legend("topright",
-       legend = paste(target_periods, "Myr"),
-       col = cols,
-       lwd = 1.5,
-       cex = 0.75,
-       bg = "white")
-
-
+cat("Dominant 55-75 Myr period:", round(peak.period, 1), "Myr\n")
+cat("Posterior median power:", power.median[peak.index], "\n")
+cat("95% red-noise threshold:", global.signif[peak.index], "\n")

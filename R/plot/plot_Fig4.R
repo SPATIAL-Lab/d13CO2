@@ -6,7 +6,9 @@
 # Assumes object exists:
 # inv.out
 
-load("output/model_runs/chpc_260511/output/inv.out_main.rda")
+if (!exists("model.output.root", inherits = FALSE)) model.output.root <- "output/model_runs/final_archiveblock_3M"
+if (!exists("figure.output.root", inherits = FALSE)) figure.output.root <- "output/figures"
+load(file.path(model.output.root, "inv_out_main.rda"))
 
 ####################################################################################################
 ####################################################################################################
@@ -45,9 +47,6 @@ bulk_sr.nsb.sd <- 1
 
 bulk_marg.nsb.m <- 0
 bulk_marg.nsb.sd <- 0.75
-
-hyp_shape <- 1e3
-hyp_rate <- 1e-3
 
 n_prior_draws <- 1e5
 
@@ -91,9 +90,7 @@ sample_A_terms <- function(n = n_prior_draws) {
 }
 
 sample_site_prior <- function(stem, m, sd, A_terms, n = n_prior_draws) {
-  mu <- rnorm(n, mean = m, sd = sd)
-  tau <- rgamma(n, shape = hyp_shape, rate = hyp_rate)
-  eta_site <- rnorm(n, mean = mu, sd = 1 / sqrt(tau))
+  eta_site <- rnorm(n, mean = m, sd = sd)
   
   if (stem == "bf") {
     eta_site + A_terms$Abf
@@ -198,17 +195,19 @@ for (stem in families) {
 # Plot
 ####################################################################################################
 
-quartz(width = 12, height = 10)
+dir.create(figure.output.root, recursive = TRUE, showWarnings = FALSE)
+cairo_pdf(file.path(figure.output.root, "Figure4.pdf"), width = 5.976744, height = 4.524064)
 
 op <- par(no.readonly = TRUE)
-on.exit(par(op), add = TRUE)
 
 layout(matrix(1:10, nrow = 5, byrow = TRUE))
-par(xaxs = "i", yaxs = "i", mar = c(3.5, 4.8, 2.6, 1.2))
+par(xaxs = "i", yaxs = "i", mar = c(1.45, 2.65, 0.35, 0.35),
+    oma = c(0, 2.0, 0, 0), mgp = c(1.35, 0.35, 0),
+    tcl = -0.16, cex.axis = 0.68, cex.lab = 0.72)
 
-col_prior <- adjustcolor("slateblue", 0.5)
+col_prior <- adjustcolor("purple4", 0.45)
 col_post <- adjustcolor("coral1", 0.5)
-col_pmed <- "navyblue"
+col_pmed <- "purple4"
 col_mmed <- "darkred"
 
 xlab_expr <- expression(paste(epsilon["NSB"], " (", "\u2030", " VPDB)"))
@@ -227,11 +226,13 @@ for (i in seq_along(families)) {
   xhi <- max(dprior$x, dpost$x, na.rm = TRUE)
   ymax <- 1.05 * max(dprior$y, dpost$y, na.rm = TRUE)
   
-  xlab_use <- if (i %in% c(9, 10)) xlab_expr else ""
-  ylab_use <- if (i %% 2 == 1) ylab_str else ""
-  
   plot(NA, xlim = c(xlo, xhi), ylim = c(0, ymax),
-       xlab = xlab_use, ylab = ylab_use)
+       xlab = "", ylab = "", axes = FALSE)
+
+  axis(1)
+  axis(2, labels = i %% 2 == 1, las = 1)
+  box()
+  if (i %in% c(9, 10)) mtext(xlab_expr, side = 1, line = 1.0, cex = 0.72)
   
   grid(nx = NA, ny = NULL)
   
@@ -251,18 +252,19 @@ for (i in seq_along(families)) {
   post_med_y <- approx(dpost$x, dpost$y, post_med, rule = 2)$y
   segments(post_med, 0, post_med, post_med_y, col = col_mmed, lty = "dashed")
   
-  legend("topright",
-         legend = c("prior", "posterior"),
-         fill = c(col_prior, col_post),
-         border = NA,
-         bty = "n",
-         cex = 0.9)
+  if (i == 2) {
+    legend("topright", legend = c("prior", "posterior"),
+           fill = c(col_prior, col_post), border = NA, bty = "n", cex = 0.62)
+  }
   
   text(par("usr")[1] + 0.02 * diff(par("usr")[1:2]),
        par("usr")[4] - 0.05 * diff(par("usr")[3:4]),
        labels = fam_label[[stem]],
        adj = c(0, 1),
-       cex = 1.0,
+       cex = 0.72,
        font = 2)
 }
 
+mtext(ylab_str, side = 2, outer = TRUE, line = 0.65, cex = 0.75)
+
+invisible(dev.off())

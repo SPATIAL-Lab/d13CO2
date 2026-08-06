@@ -1,60 +1,29 @@
-# History files
+# Legacy material
+legacy/
+
+# Generated model and figure outputs
+output/
+Rplots.pdf
+
+# R session and project state
 .Rhistory
-.Rapp.history
-
-# Session Data files
 .RData
-.RDataTmp
-
-# User-specific files
 .Ruserdata
-.DS_Store
-/output/
-/legacy/
-/data/raw/High_Resolution_Climate_Simulation_Dataset_540_Myr.nc
-/lateCenozoic
-/R/plot/legacy
-
-# Example code in package build process
-*-Ex.R
-
-# Output files from R CMD build
-/*.tar.gz
-
-# Output files from R CMD check
-/*.Rcheck/
-
-# RStudio files
 .Rproj.user/
 
-# produced vignettes
-vignettes/*.html
-vignettes/*.pdf
+# Batch-job and log files
+slurm-*.out
+*.log
 
-# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
-.httr-oauth
-
-# knitr and R markdown default cache directories
-*_cache/
-/cache/
-
-# Temporary files created by R markdown
-*.utf8.md
-*.knit.md
-
-# R Environment Variables
-.Renviron
+# Temporary and backup files
+*.tmp
+*.bak
+*~
 .DS_Store
 
-# pkgdown site
-docs/
-workspaces/
+# Local development directories
+.vscode/
+.idea/
 archive/
-
-# translation temp files
-po/*~
-
-# RStudio Connect folder
-rsconnect/
-.DS_Store
+backup_*/
 .positai

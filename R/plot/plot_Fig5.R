@@ -12,8 +12,9 @@
 # inv.out
 # ages
 
-load("output/model_runs/chpc_260511/output/inv.out_main.rda")
-load("output/model_runs/chpc_260511/output/ages_main.rda")
+if (!exists("model.output.root", inherits = FALSE)) model.output.root <- "output/model_runs/final_archiveblock_3M"
+if (!exists("figure.output.root", inherits = FALSE)) figure.output.root <- "output/figures"
+load(file.path(model.output.root, "inv_out_main.rda"))
 
 ####################################################################################################
 ####################################################################################################
@@ -202,12 +203,12 @@ cor_out$p_Dorg_logCO2 <- cor_log$p
 ####################################################################################################
 # Layout 
 ####################################################################################################
-quartz(width = 11, height = 13)
+dir.create(figure.output.root, recursive = TRUE, showWarnings = FALSE)
+cairo_pdf(file.path(figure.output.root, "Figure5.pdf"), width = 5.651163, height = 6.381708)
 
 op <- par(no.readonly = TRUE)
-on.exit(par(op), add = TRUE)
 
-layout(matrix(1:7, ncol = 1), heights = c(3.6, 3.0, 3.2, 3.0, 3.0, 0.9, 1.2))
+layout(matrix(1:7, ncol = 1), heights = c(3.6, 3.0, 3.2, 3.0, 3.0, 0.9, 1.5))
 par(xaxs = "i", yaxs = "i")
 
 xlim <- c(358, 0)
@@ -221,6 +222,12 @@ y_labs <- c(expression(delta^13*C[CO[2]]~"(" * "\u2030 VPDB" * ")"),
             expression(Delta[org-atm]~"(" * "\u2030 VPDB" * ")"),
             "windowed r",
             expression(CO[2]~"(ppm)"))
+
+panel_lab <- function(lab) {
+  usr <- par("usr")
+  text(usr[1] - 0.025*diff(range(usr[1:2])), usr[4] - 0.08*diff(usr[3:4]),
+       lab, adj = c(0, 1), font = 2)
+}
 
 
 ####################################################################################################
@@ -247,6 +254,7 @@ axis(3, at = ticks10, labels = FALSE)
 axis(3, at = ticks50, labels = ticks50, tick = FALSE) 
 axis(y_sides[1])
 mtext(y_labs[1], side = y_sides[1], line = 2.8)
+panel_lab("a.")
 
 
 ####################################################################################################
@@ -264,6 +272,7 @@ lines(org_age, org_mu, col = "darkgreen", lwd = 3)
 
 axis(y_sides[2])
 mtext(y_labs[2], side = y_sides[2], line = 2.8)
+panel_lab("b.")
 
 
 ####################################################################################################
@@ -310,6 +319,7 @@ lines(org_age, diff_series, lwd = 2, col = "darkred")
 
 axis(y_sides[3])
 mtext(y_labs[3], side = y_sides[3], line = 2.8)
+panel_lab("c.")
 
 
 ####################################################################################################
@@ -330,6 +340,7 @@ lines(cor_out$age, cor_out$r_Dorg_logCO2, lwd = 2, col = "firebrick")
 
 axis(y_sides[4])
 mtext(y_labs[4], side = y_sides[4], line = 2.8)
+panel_lab("d.")
 
 legend("bottomleft",
        inset = 0.02,
@@ -363,6 +374,7 @@ lines(x, co2$mu, lwd = 2)
 
 axis(y_sides[5])
 mtext(y_labs[5], side = y_sides[5], line = 2.8)
+panel_lab("e.")
 
 
 ####################################################################################################
@@ -386,12 +398,13 @@ for (i in seq_len(nrow(gsa))) {
 }
 
 box()
+panel_lab("f.")
 
 
 ####################################################################################################
 ## Shared bottom x axis
 ####################################################################################################
-par(mar = c(3.6, 5.2, 0.2, 5.2))
+par(mar = c(2.4, 5.2, 0.1, 5.2))
 
 plot(NA, xlim = xlim, ylim = c(0,1), xaxt = "n", yaxt = "n",
      xlab = "", ylab = "", bty = "n")
@@ -399,6 +412,6 @@ plot(NA, xlim = xlim, ylim = c(0,1), xaxt = "n", yaxt = "n",
 axis(1, at = ticks10, labels = FALSE)
 axis(1, at = ticks50, labels = ticks50, tick = FALSE)
 
-mtext("Age (Ma)", side = 1, line = 2.4)
+mtext("Age (Ma)", side = 1, line = 1.5)
 
-
+invisible(dev.off())

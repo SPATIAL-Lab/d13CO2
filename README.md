@@ -28,12 +28,8 @@ source("RunFullAnalysis.R")
 
 Model outputs are written to `output/model_runs/final_archiveblock_3M/`, and figures are written to `output/figures/`.
 
-## CHPC
-
-The seven profiles can be run independently as a Slurm array with `chpc/d13CO2_suite_3M.sh`. See `chpc/README.md` for details.
-
 ## Data processing
 
-The current preprocessing scripts are in `R/preprocess/`. Earlier paleogeographic reconstruction files and processing provenance are retained under `legacy/`.
+The current preprocessing scripts are in `R/preprocess/`. Earlier paleogeographic reconstruction files and processing provenance are retained locally under `legacy/`.
 
 The 719 MB climate-simulation NetCDF is configured for Git LFS in `.gitattributes`; initialize Git LFS before adding the data to a remote repository.

@@ -15,8 +15,23 @@ model {
   for (i in 1:n.d13Cbivalve){
     d13Cbivalve.data[i] ~ dnorm(d13Cbivalve[ri.d13Cbivalve[i]], 1/d13Cbivalve.sd[i]^2)
   }
+  for (i in 1:n.d13Camm){
+    d13Camm.data[i] ~ dnorm(d13Camm[ri.d13Camm[i]], 1/d13Camm.sd[i]^2)
+  }
+  for (i in 1:n.d13Cbel){
+    d13Cbel.data[i] ~ dnorm(d13Cbel[ri.d13Cbel[i]], 1/d13Cbel.sd[i]^2)
+  }
+  for (i in 1:n.d13Cmicrite){
+    d13Cmicrite.data[i] ~ dnorm(d13Cmicrite[ri.d13Cmicrite[i]], 1/d13Cmicrite.sd[i]^2)
+  }
   for (i in 1:n.d13Cbulk){
     d13Cbulk.data[i] ~ dnorm(d13Cbulk[ri.d13Cbulk[i]], 1/d13Cbulk.sd[i]^2)
+  }
+  for (i in 1:n.d13Cbulk_sr){
+    d13Cbulk_sr.data[i] ~ dnorm(d13Cbulk_sr[ri.d13Cbulk_sr[i]], 1/d13Cbulk_sr.sd[i]^2)
+  }
+  for (i in 1:n.d13Cbulk_marg){
+    d13Cbulk_marg.data[i] ~ dnorm(d13Cbulk_marg[ri.d13Cbulk_marg[i]], 1/d13Cbulk_marg.sd[i]^2)
   }
 
   # Constants
@@ -44,15 +59,25 @@ model {
   level_archive_mean[3] <- d13CO2_level_prior_mean+cc_co2_constant1-Asurf
   level_archive_mean[4] <- d13CO2_level_prior_mean+cc_co2_constant1-Asurf
   level_archive_mean[5] <- d13CO2_level_prior_mean+cc_co2_constant1-Asurf
-  level_archive_mean[6] <- d13CO2_level_prior_mean+cc_co2_constant1+Asurf
-  level_archive_block[1:6] ~ dmnorm(level_archive_mean[], level_archive_precision[,])
+  level_archive_mean[6] <- d13CO2_level_prior_mean+cc_co2_constant1-Asurf
+  level_archive_mean[7] <- d13CO2_level_prior_mean+cc_co2_constant1-Asurf
+  level_archive_mean[8] <- d13CO2_level_prior_mean+cc_co2_constant1-Asurf
+  level_archive_mean[9] <- d13CO2_level_prior_mean+cc_co2_constant1-Asurf
+  level_archive_mean[10] <- d13CO2_level_prior_mean+cc_co2_constant1-Asurf
+  level_archive_mean[11] <- d13CO2_level_prior_mean+cc_co2_constant1-Asurf
+  level_archive_block[1:11] ~ dmnorm(level_archive_mean[], level_archive_precision[,])
 
   d13CO2_level <- level_archive_block[1]
   bf.archive_level <- level_archive_block[2]
   pf.archive_level <- level_archive_block[3]
   brach.archive_level <- level_archive_block[4]
   bivalve.archive_level <- level_archive_block[5]
-  bulk.archive_level <- level_archive_block[6]
+  amm.archive_level <- level_archive_block[6]
+  bel.archive_level <- level_archive_block[7]
+  micrite.archive_level <- level_archive_block[8]
+  bulk.archive_level <- level_archive_block[9]
+  bulk_sr.archive_level <- level_archive_block[10]
+  bulk_marg.archive_level <- level_archive_block[11]
 
   bf.nsb_mean <- d13CO2_level-Abf-bf.archive_level
   bf.nsb_tau ~ dgamma(1e3, 1e-3)
@@ -86,12 +111,52 @@ model {
     bivalve.nsb_site[i] <- bivalve.eta_site[i] + Asurf
   }
 
-  bulk.nsb_mean <- bulk.archive_level-d13CO2_level-cc_co2_constant1-Asurf
+  amm.nsb_mean <- d13CO2_level+cc_co2_constant1-Asurf-amm.archive_level
+  amm.nsb_tau ~ dgamma(1e3, 1e-3)
+  for (i in 1:n.sites.amm){
+    amm.eta_std[i] ~ dnorm(0, 1)
+    amm.eta_site[i] <- amm.nsb_mean + amm.eta_std[i]/sqrt(amm.nsb_tau)
+    amm.nsb_site[i] <- amm.eta_site[i] + Asurf
+  }
+
+  bel.nsb_mean <- d13CO2_level+cc_co2_constant1-Asurf-bel.archive_level
+  bel.nsb_tau ~ dgamma(1e3, 1e-3)
+  for (i in 1:n.sites.bel){
+    bel.eta_std[i] ~ dnorm(0, 1)
+    bel.eta_site[i] <- bel.nsb_mean + bel.eta_std[i]/sqrt(bel.nsb_tau)
+    bel.nsb_site[i] <- bel.eta_site[i] + Asurf
+  }
+
+  micrite.nsb_mean <- d13CO2_level+cc_co2_constant1-Asurf-micrite.archive_level
+  micrite.nsb_tau ~ dgamma(1e3, 1e-3)
+  for (i in 1:n.sites.micrite){
+    micrite.eta_std[i] ~ dnorm(0, 1)
+    micrite.eta_site[i] <- micrite.nsb_mean + micrite.eta_std[i]/sqrt(micrite.nsb_tau)
+    micrite.nsb_site[i] <- micrite.eta_site[i] + Asurf
+  }
+
+  bulk.nsb_mean <- d13CO2_level+cc_co2_constant1-Asurf-bulk.archive_level
   bulk.nsb_tau ~ dgamma(1e3, 1e-3)
   for (i in 1:n.sites.bulk){
     bulk.eta_std[i] ~ dnorm(0, 1)
     bulk.eta_site[i] <- bulk.nsb_mean + bulk.eta_std[i]/sqrt(bulk.nsb_tau)
     bulk.nsb_site[i] <- bulk.eta_site[i] + Asurf
+  }
+
+  bulk_sr.nsb_mean <- d13CO2_level+cc_co2_constant1-Asurf-bulk_sr.archive_level
+  bulk_sr.nsb_tau ~ dgamma(1e3, 1e-3)
+  for (i in 1:n.sites.bulk_sr){
+    bulk_sr.eta_std[i] ~ dnorm(0, 1)
+    bulk_sr.eta_site[i] <- bulk_sr.nsb_mean + bulk_sr.eta_std[i]/sqrt(bulk_sr.nsb_tau)
+    bulk_sr.nsb_site[i] <- bulk_sr.eta_site[i] + Asurf
+  }
+
+  bulk_marg.nsb_mean <- d13CO2_level+cc_co2_constant1-Asurf-bulk_marg.archive_level
+  bulk_marg.nsb_tau ~ dgamma(1e3, 1e-3)
+  for (i in 1:n.sites.bulk_marg){
+    bulk_marg.eta_std[i] ~ dnorm(0, 1)
+    bulk_marg.eta_site[i] <- bulk_marg.nsb_mean + bulk_marg.eta_std[i]/sqrt(bulk_marg.nsb_tau)
+    bulk_marg.nsb_site[i] <- bulk_marg.eta_site[i] + Asurf
   }
 
   # Proxy system model
@@ -117,9 +182,30 @@ model {
     d13Cbivalve[i] <- d13CO2_delta[ai.flat.bivalve[i]] + bivalve.archive_level
     - cc_co2_coeff1*tempC[ri.flat.bivalve[i]] - bivalve.eta_std[si.flat.bivalve[i]]/sqrt(bivalve.nsb_tau)
   }
+  for (i in 1:n.flat.amm){
+    d13Camm[i] <- d13CO2_delta[ai.flat.amm[i]] + amm.archive_level
+    - cc_co2_coeff1*tempC[ri.flat.amm[i]] - amm.eta_std[si.flat.amm[i]]/sqrt(amm.nsb_tau)
+  }
+  for (i in 1:n.flat.bel){
+    d13Cbel[i] <- d13CO2_delta[ai.flat.bel[i]] + bel.archive_level
+    - cc_co2_coeff1*tempC[ri.flat.bel[i]] - bel.eta_std[si.flat.bel[i]]/sqrt(bel.nsb_tau)
+  }
+
   for (i in 1:n.flat.bulk){
     d13Cbulk[i] <- d13CO2_delta[ai.flat.bulk[i]] + bulk.archive_level
-    - cc_co2_coeff1*tempC[ri.flat.bulk[i]] + bulk.eta_std[si.flat.bulk[i]]/sqrt(bulk.nsb_tau)
+    - cc_co2_coeff1*tempC[ri.flat.bulk[i]] - bulk.eta_std[si.flat.bulk[i]]/sqrt(bulk.nsb_tau)
+  }
+  for (i in 1:n.flat.micrite){
+    d13Cmicrite[i] <- d13CO2_delta[ai.flat.micrite[i]] + micrite.archive_level
+    - cc_co2_coeff1*tempC[ri.flat.micrite[i]] - micrite.eta_std[si.flat.micrite[i]]/sqrt(micrite.nsb_tau)
+  }
+  for (i in 1:n.flat.bulk_sr){
+    d13Cbulk_sr[i] <- d13CO2_delta[ai.flat.bulk_sr[i]] + bulk_sr.archive_level
+    - cc_co2_coeff1*tempC[ri.flat.bulk_sr[i]] - bulk_sr.eta_std[si.flat.bulk_sr[i]]/sqrt(bulk_sr.nsb_tau)
+  }
+  for (i in 1:n.flat.bulk_marg){
+    d13Cbulk_marg[i] <- d13CO2_delta[ai.flat.bulk_marg[i]] + bulk_marg.archive_level
+    - cc_co2_coeff1*tempC[ri.flat.bulk_marg[i]] - bulk_marg.eta_std[si.flat.bulk_marg[i]]/sqrt(bulk_marg.nsb_tau)
   }
 
   # Time evolution model

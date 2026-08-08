@@ -3,7 +3,10 @@
 library(R2jags)
 
 if (!exists("run.profile", inherits = FALSE)) run.profile <- "main"
-if (!exists("output.root", inherits = FALSE)) output.root <- "output/model_runs/final_archiveblock_3M"
+if (!exists("model.run", inherits = FALSE)) model.run <- NULL
+source("R/model/d13CO2_RunPaths.R", local = TRUE)
+model.run <- d13CO2_model_run_name(model.run)
+output.root <- d13CO2_model_run_dir(model.run, create = TRUE)
 if (!exists("n.chains", inherits = FALSE)) n.chains <- 4L
 if (!exists("n.iter", inherits = FALSE)) n.iter <- 3e6
 if (!exists("n.burnin", inherits = FALSE)) n.burnin <- n.iter/2
@@ -12,7 +15,7 @@ if (!exists("run.seed", inherits = FALSE)) run.seed <- 26072600L
 if (!exists("save.run.output", inherits = FALSE)) save.run.output <- TRUE
 if (!exists("save.full.output", inherits = FALSE)) save.full.output <- FALSE
 
-model.version <- "2026-08-06-compact-archiveblock-normal"
+model.version <- "2026-08-07-compact-archiveblock-uniform-minus-nsb"
 if (exists("model.version.override", inherits = FALSE)) model.version <- model.version.override
 
 run.profiles <- list(
@@ -58,11 +61,11 @@ d13C.analyt.sd <- 0.1
 if (!exists("d13CO2_sigma_upper", inherits = FALSE)) d13CO2_sigma_upper <- 0.1
 
 if (run.profile == "cenozoic") {
-  model.file <- "R/model/d13CO2_PSM_cenozoic_revised.R"
+  model.file <- "R/model/d13CO2_PSM_cenozoic.R"
 } else if (run.settings$coupled) {
-  model.file <- "R/model/d13CO2_PSM_coupled_revised.R"
+  model.file <- "R/model/d13CO2_PSM_coupled.R"
 } else {
-  model.file <- "R/model/d13CO2_PSM_revised.R"
+  model.file <- "R/model/d13CO2_PSM.R"
 }
 if (exists("model.file.override", inherits = FALSE)) model.file <- model.file.override
 
@@ -325,6 +328,8 @@ run.time <- system.time({
 })
 
 run.metadata <- list(
+  model.run = model.run,
+  output.directory = output.root,
   run.profile = run.profile,
   run.id = run.profile,
   model.version = model.version,
@@ -365,6 +370,29 @@ if (save.run.output) {
        nsb.site.map, d13C.cell.map, GMST.m, GMST.sd, BWT.m, BWT.sd, run.metadata,
        file = file.path(output.root, paste0("inv_out_", run.profile, ".rda")))
   saveRDS(run.metadata, file.path(output.root, paste0("run_metadata_", run.profile, ".rds")))
+
+  posterior_qband <- function(parameter) {
+    draws <- as.matrix(inv.out$BUGSoutput$sims.list[[parameter]])
+    if (nrow(draws) == length(ages)) draws <- t(draws)
+    if (ncol(draws) != length(ages)) stop(parameter, " dimensions do not match ages")
+    q <- apply(draws, 2, quantile,
+               probs = c(0.025, 0.25, 0.5, 0.75, 0.975), na.rm = TRUE)
+    list(q025 = q[1, ], q25 = q[2, ], med = q[3, ],
+         q75 = q[4, ], q975 = q[5, ])
+  }
+  posterior.summary <- list(
+    ages = ages,
+    GMST.m = GMST.m,
+    GMST.sd = GMST.sd,
+    BWT.m = BWT.m,
+    BWT.sd = BWT.sd,
+    run.metadata = run.metadata,
+    d13CO2 = posterior_qband("d13CO2"),
+    GMST = posterior_qband("GMST"),
+    BWT = posterior_qband("BWT")
+  )
+  saveRDS(posterior.summary,
+          file.path(output.root, paste0("posterior_summary_", run.profile, ".rds")))
 }
 
 invisible(run.metadata)

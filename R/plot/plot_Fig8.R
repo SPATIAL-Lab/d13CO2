@@ -1,36 +1,30 @@
 # Figure 8: paleogeographic-model sensitivity test
 
 load_run <- function(file) {
-  e <- new.env(parent = emptyenv())
-  load(file, envir = e)
-  if (!all(c("inv.out", "ages", "run.metadata") %in% ls(e))) stop("Run bundle is incomplete: ", file)
-  e
-}
-get_draws <- function(run, parameter) {
-  mat <- as.matrix(run$inv.out$BUGSoutput$sims.list[[parameter]])
-  if (ncol(mat) == length(run$ages)) return(mat)
-  if (nrow(mat) == length(run$ages)) return(t(mat))
-  stop(parameter, " dimensions do not match ages")
-}
-qband <- function(mat) {
-  q <- apply(mat, 2, quantile, probs = c(0.025, 0.975, 0.5), na.rm = TRUE)
-  list(q025 = q[1, ], q975 = q[2, ], med = q[3, ])
+  run <- readRDS(file)
+  if (!all(c("ages", "run.metadata", "d13CO2") %in% names(run))) {
+    stop("Run summary is incomplete: ", file)
+  }
+  run
 }
 
-if (!exists("model.output.root", inherits = FALSE)) model.output.root <- "output/model_runs/final_archiveblock_3M"
+if (!exists("model.output.root", inherits = FALSE)) {
+  source("R/model/d13CO2_RunPaths.R", local = TRUE)
+  selected.run <- if (exists("model.run", inherits = FALSE)) model.run else NULL
+  model.output.root <- d13CO2_model_run_dir(selected.run, must.exist = TRUE)
+}
 if (!exists("figure.output.root", inherits = FALSE)) figure.output.root <- "output/figures"
-runs <- list(
-  Sc16 = load_run(file.path(model.output.root, "inv_out_main.rda")),
-  TC17 = load_run(file.path(model.output.root, "inv_out_plate_torsvik2017.rda")),
-  MU22 = load_run(file.path(model.output.root, "inv_out_plate_merdith2021.rda")),
-  CAO24 = load_run(file.path(model.output.root, "inv_out_plate_cao2024.rda"))
-)
+runs <- list()
+runs$Sc16 <- load_run(file.path(model.output.root, "posterior_summary_main.rds"))
+runs$TC17 <- load_run(file.path(model.output.root, "posterior_summary_plate_torsvik2017.rds"))
+runs$MU22 <- load_run(file.path(model.output.root, "posterior_summary_plate_merdith2021.rds"))
+runs$CAO24 <- load_run(file.path(model.output.root, "posterior_summary_plate_cao2024.rds"))
 
 if (!all(vapply(runs[-1], function(x) isTRUE(all.equal(x$ages, runs$Sc16$ages)), logical(1)))) {
   stop("Plate-model runs do not use the same age grid")
 }
 
-qb <- lapply(runs, function(x) qband(get_draws(x, "d13CO2")))
+qb <- lapply(runs, `[[`, "d13CO2")
 ages <- runs$Sc16$ages
 idx <- which(ages >= 0 & ages <= 540000)
 x_ma <- ages[idx]/1000

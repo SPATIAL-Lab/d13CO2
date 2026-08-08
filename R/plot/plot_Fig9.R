@@ -1,28 +1,22 @@
 # Figure 9: GMST-BWT coupling sensitivity test
 
 load_run <- function(file){
-  e <- new.env(parent = emptyenv())
-  load(file, envir = e)
-  e
+  run <- readRDS(file)
+  if (!all(c("ages", "d13CO2", "BWT", "GMST") %in% names(run))) {
+    stop("Run summary is incomplete: ", file)
+  }
+  run
 }
 
-get_draws <- function(run, parameter){
-  draws <- as.matrix(run$inv.out$BUGSoutput$sims.list[[parameter]])
-  if (ncol(draws) == length(run$ages)) return(draws)
-  if (nrow(draws) == length(run$ages)) return(t(draws))
-  stop(parameter, " dimensions do not match ages")
+if (!exists("model.output.root", inherits = FALSE)) {
+  source("R/model/d13CO2_RunPaths.R", local = TRUE)
+  selected.run <- if (exists("model.run", inherits = FALSE)) model.run else NULL
+  model.output.root <- d13CO2_model_run_dir(selected.run, must.exist = TRUE)
 }
-
-qband <- function(draws){
-  q <- apply(draws, 2, quantile, probs = c(0.025, 0.5, 0.975), na.rm = TRUE)
-  list(q025 = q[1, ], median = q[2, ], q975 = q[3, ])
-}
-
-if (!exists("model.output.root", inherits = FALSE)) model.output.root <- "output/model_runs/final_archiveblock_3M"
 if (!exists("figure.output.root", inherits = FALSE)) figure.output.root <- "output/figures"
 
-main <- load_run(file.path(model.output.root, "inv_out_main.rda"))
-coupled <- load_run(file.path(model.output.root, "inv_out_coupled.rda"))
+main <- load_run(file.path(model.output.root, "posterior_summary_main.rds"))
+coupled <- load_run(file.path(model.output.root, "posterior_summary_coupled.rds"))
 
 if (!isTRUE(all.equal(main$ages, coupled$ages))) stop("The main and coupled runs do not use the same age grid")
 
@@ -30,8 +24,8 @@ ages <- main$ages
 keep <- which(ages >= 0 & ages <= 540000)
 age.Ma <- ages[keep]/1000
 
-main.q <- lapply(c("d13CO2", "BWT", "GMST"), function(x) qband(get_draws(main, x)))
-coupled.q <- lapply(c("d13CO2", "BWT", "GMST"), function(x) qband(get_draws(coupled, x)))
+main.q <- main[c("d13CO2", "BWT", "GMST")]
+coupled.q <- coupled[c("d13CO2", "BWT", "GMST")]
 
 main.fill <- adjustcolor("grey55", 0.30)
 main.line <- "black"
@@ -50,8 +44,8 @@ plot_panel <- function(main.band, coupled.band, ylab, panel, show.x = FALSE, sho
   polygon(c(age.Ma, rev(age.Ma)),
           c(coupled.band$q025[keep], rev(coupled.band$q975[keep])),
           col = coupled.fill, border = NA)
-  lines(age.Ma, main.band$median[keep], col = main.line, lwd = 1.4)
-  lines(age.Ma, coupled.band$median[keep], col = coupled.line, lwd = 1.4)
+  lines(age.Ma, main.band$med[keep], col = main.line, lwd = 1.4)
+  lines(age.Ma, coupled.band$med[keep], col = coupled.line, lwd = 1.4)
   box()
   usr <- par("usr")
   text(usr[1] + 0.02*(usr[2]-usr[1]), usr[4] - 0.06*diff(usr[3:4]),

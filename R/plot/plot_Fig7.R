@@ -5,28 +5,21 @@ safe_par_reset <- function(op) {
   par(op[setdiff(names(op), bad)])
 }
 load_run <- function(file) {
-  e <- new.env(parent = emptyenv())
-  load(file, envir = e)
-  required <- c("inv.out", "ages", "GMST.m", "GMST.sd", "run.metadata")
-  if (!all(required %in% ls(e))) stop("Run bundle is incomplete: ", file)
-  e
-}
-get_draws <- function(run, parameter) {
-  mat <- as.matrix(run$inv.out$BUGSoutput$sims.list[[parameter]])
-  if (ncol(mat) == length(run$ages)) return(mat)
-  if (nrow(mat) == length(run$ages)) return(t(mat))
-  stop(parameter, " dimensions do not match ages")
-}
-qband <- function(mat) {
-  q <- apply(mat, 2, quantile, probs = c(0.025, 0.975, 0.5), na.rm = TRUE)
-  list(q025 = q[1, ], q975 = q[2, ], med = q[3, ])
+  run <- readRDS(file)
+  required <- c("ages", "GMST.m", "GMST.sd", "run.metadata", "d13CO2", "GMST")
+  if (!all(required %in% names(run))) stop("Run summary is incomplete: ", file)
+  run
 }
 
 ## =====================  LOAD RUN BUNDLES  =====================
-if (!exists("model.output.root", inherits = FALSE)) model.output.root <- "output/model_runs/final_archiveblock_3M"
+if (!exists("model.output.root", inherits = FALSE)) {
+  source("R/model/d13CO2_RunPaths.R", local = TRUE)
+  selected.run <- if (exists("model.run", inherits = FALSE)) model.run else NULL
+  model.output.root <- d13CO2_model_run_dir(selected.run, must.exist = TRUE)
+}
 if (!exists("figure.output.root", inherits = FALSE)) figure.output.root <- "output/figures"
-phan <- load_run(file.path(model.output.root, "inv_out_main.rda"))
-li <- load_run(file.path(model.output.root, "inv_out_gmst_scotese.rda"))
+phan <- load_run(file.path(model.output.root, "posterior_summary_main.rds"))
+li <- load_run(file.path(model.output.root, "posterior_summary_gmst_scotese.rds"))
 
 if (phan$run.metadata$GMST_model != "PhanDA") stop("The main run is not the PhanDA profile")
 if (li$run.metadata$GMST_model != "Scotese21") stop("The sensitivity run is not the Scotese21/Li22 profile")
@@ -38,10 +31,10 @@ x_common <- ages[idx]/1000
 xlim_all <- rev(range(x_common, na.rm = TRUE))
 
 ## =====================  QUANTILES  =====================
-d13_Phan <- qband(get_draws(phan, "d13CO2"))
-d13_Li <- qband(get_draws(li, "d13CO2"))
-gmst_Phan <- qband(get_draws(phan, "GMST"))
-gmst_Li <- qband(get_draws(li, "GMST"))
+d13_Phan <- phan$d13CO2
+d13_Li <- li$d13CO2
+gmst_Phan <- phan$GMST
+gmst_Li <- li$GMST
 
 GMST.low <- phan$GMST.m - 1.96*phan$GMST.sd
 GMST.hi <- phan$GMST.m + 1.96*phan$GMST.sd

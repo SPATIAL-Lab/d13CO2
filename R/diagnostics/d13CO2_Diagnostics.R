@@ -1,5 +1,30 @@
 # Save convergence diagnostics for one model run
 
+if (!exists("model.run", inherits = FALSE)) model.run <- NULL
+source("R/model/d13CO2_RunPaths.R", local = TRUE)
+model.run <- d13CO2_model_run_name(model.run)
+output.root <- d13CO2_model_run_dir(model.run, must.exist = TRUE)
+
+if (!exists("run.profile", inherits = FALSE) || !nzchar(run.profile)) {
+  run.profile <- Sys.getenv("RUN_PROFILE", unset = "")
+}
+if (!nzchar(run.profile)) {
+  stop("Set run.profile (or RUN_PROFILE) to the profile to diagnose.")
+}
+
+if (!exists("inv.out", inherits = FALSE)) {
+  model.file <- file.path(output.root, paste0("inv_out_", run.profile, ".rda"))
+  if (!file.exists(model.file)) stop("Model output does not exist: ", model.file)
+  load(model.file)
+}
+if (!exists("run.metadata", inherits = FALSE)) {
+  stop("The selected model output does not contain run.metadata.")
+}
+if (!identical(run.metadata$run.profile, run.profile)) {
+  stop("Loaded profile ", run.metadata$run.profile,
+       " does not match requested profile ", run.profile, ".")
+}
+
 split.chains <- function(x) {
   n <- nrow(x)
   h <- floor(n/2)

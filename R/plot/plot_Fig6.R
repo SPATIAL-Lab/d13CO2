@@ -12,7 +12,11 @@
 # inv.out
 # ages
 
-if (!exists("model.output.root", inherits = FALSE)) model.output.root <- "output/model_runs/final_archiveblock_3M"
+if (!exists("model.output.root", inherits = FALSE)) {
+  source("R/model/d13CO2_RunPaths.R", local = TRUE)
+  selected.run <- if (exists("model.run", inherits = FALSE)) model.run else NULL
+  model.output.root <- d13CO2_model_run_dir(selected.run, must.exist = TRUE)
+}
 if (!exists("figure.output.root", inherits = FALSE)) figure.output.root <- "output/figures"
 load(file.path(model.output.root, "inv_out_cenozoic.rda"))
 
@@ -156,9 +160,6 @@ dat$d13C_atm <- approx(
 dat$Delta <- dat$d13C - dat$d13C_atm
 dat$d13C_atm_Tipple <- approx(tipple$age, tipple$d13Ca, xout = dat$age, rule = 1)$y
 dat$Delta_Tipple <- dat$d13C - dat$d13C_atm_Tipple
-dat$age_bin <- floor(dat$age + 0.5)
-tipple_curve <- aggregate(Delta_Tipple ~ age_bin, data = dat, FUN = mean, na.rm = TRUE)
-tipple_curve <- tipple_curve[is.finite(tipple_curve$Delta_Tipple), ]
 
 
 ####################################################################################################
@@ -205,7 +206,7 @@ cex_lab <- 0.88
 cex_panel <- 1.22
 cex_ref <- 0.78
 
-ylab_a <- expression("Plant Wax " * delta^13 * "C (" * "\u2030" ~ VPDB * ")")
+ylab_a <- expression(delta^13*C[wax]~"(‰ VPDB)")
 ylab_b <- expression(delta^13*C[CO[2]]~"(‰ VPDB)")
 ylab_c <- expression(Delta[leaf-atm] ~ "(" * "\u2030" ~ VPDB * ")")
 ylab_d <- expression(paleo-CO[2] ~ "(ppm)")
@@ -369,7 +370,7 @@ panel_lab("b.", xlim, ylim_b)
 ####################################################################################################
 par(mar = c(0.4, 5.2, 0.2, 5.2))
 
-ylim_c <- range(c(dat$Delta, tipple_curve$Delta_Tipple, Delta_C3, Delta_wsC3, Delta_C4), na.rm = TRUE)
+ylim_c <- range(c(dat$Delta, dat$Delta_Tipple, Delta_C3, Delta_wsC3, Delta_C4), na.rm = TRUE)
 y_major_c <- pretty(ylim_c)
 y_minor_c <- seq(floor(min(ylim_c, na.rm = TRUE)),
                  ceiling(max(ylim_c, na.rm = TRUE)),
@@ -385,8 +386,8 @@ plot(
   axes = FALSE
 )
 
-lines(tipple_curve$age_bin, tipple_curve$Delta_Tipple,
-      col = gray(0.55), lwd = 2.2)
+points(dat$age, dat$Delta_Tipple, pch = 1, cex = 0.65,
+       col = adjustcolor(gray(0.4), 0.7))
 
 abline(h = Delta_C3, lty = 2, lwd = 1.15, col = gray(0.25))
 abline(h = Delta_wsC3, lty = 2, lwd = 1.15, col = gray(0.25))
@@ -432,7 +433,8 @@ for (i in seq_along(cats)) {
 }
 
 legend("bottomleft", legend = "Tipple et al. (2010) Fig. 4-based",
-       col = gray(0.45), lwd = 2.2, bty = "n", cex = 0.7)
+       col = gray(0.4), pch = 1, pt.cex = 0.75,
+       inset = c(0.055, 0.01), bty = "n", cex = 0.7)
 
 axis(1, at = x_major, labels = FALSE, tck = major_tick, cex.axis = cex_axis)
 axis(2, at = y_major_c, las = 1, tck = major_tick, cex.axis = cex_axis)

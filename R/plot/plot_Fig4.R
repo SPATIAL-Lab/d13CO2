@@ -6,7 +6,11 @@
 # Assumes object exists:
 # inv.out
 
-if (!exists("model.output.root", inherits = FALSE)) model.output.root <- "output/model_runs/final_archiveblock_3M"
+if (!exists("model.output.root", inherits = FALSE)) {
+  source("R/model/d13CO2_RunPaths.R", local = TRUE)
+  selected.run <- if (exists("model.run", inherits = FALSE)) model.run else NULL
+  model.output.root <- d13CO2_model_run_dir(selected.run, must.exist = TRUE)
+}
 if (!exists("figure.output.root", inherits = FALSE)) figure.output.root <- "output/figures"
 load(file.path(model.output.root, "inv_out_main.rda"))
 

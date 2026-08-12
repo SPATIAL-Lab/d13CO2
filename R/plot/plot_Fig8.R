@@ -17,7 +17,7 @@ if (!exists("figure.output.root", inherits = FALSE)) figure.output.root <- "outp
 runs <- list()
 runs$Sc16 <- load_run(file.path(model.output.root, "posterior_summary_main.rds"))
 runs$TC17 <- load_run(file.path(model.output.root, "posterior_summary_plate_torsvik2017.rds"))
-runs$MU22 <- load_run(file.path(model.output.root, "posterior_summary_plate_merdith2021.rds"))
+runs$ME21 <- load_run(file.path(model.output.root, "posterior_summary_plate_merdith2021.rds"))
 runs$CAO24 <- load_run(file.path(model.output.root, "posterior_summary_plate_cao2024.rds"))
 
 if (!all(vapply(runs[-1], function(x) isTRUE(all.equal(x$ages, runs$Sc16$ages)), logical(1)))) {
@@ -33,11 +33,11 @@ ylim_all <- range(unlist(lapply(qb, function(x) c(x$q025[idx], x$q975[idx]))), n
 
 col_Sc16_fill <- adjustcolor("#999999", alpha.f = 0.35); col_Sc16_line <- "#000000"
 col_TC17_fill <- adjustcolor("#E69F00", alpha.f = 0.35); col_TC17_line <- "#E69F00"
-col_MU22_fill <- adjustcolor("#56B4E9", alpha.f = 0.35); col_MU22_line <- "#0072B2"
+col_ME21_fill <- adjustcolor("#56B4E9", alpha.f = 0.35); col_ME21_line <- "#0072B2"
 col_CAO24_fill <- adjustcolor("#009E73", alpha.f = 0.35); col_CAO24_line <- "#009E73"
 
-fill <- c(Sc16 = col_Sc16_fill, TC17 = col_TC17_fill, MU22 = col_MU22_fill, CAO24 = col_CAO24_fill)
-line <- c(Sc16 = col_Sc16_line, TC17 = col_TC17_line, MU22 = col_MU22_line, CAO24 = col_CAO24_line)
+fill <- c(Sc16 = col_Sc16_fill, TC17 = col_TC17_fill, ME21 = col_ME21_fill, CAO24 = col_CAO24_fill)
+line <- c(Sc16 = col_Sc16_line, TC17 = col_TC17_line, ME21 = col_ME21_line, CAO24 = col_CAO24_line)
 ylab_expr <- expression(delta^13*C[CO[2]]~"(" * "‰" * ")")
 
 dir.create(figure.output.root, recursive = TRUE, showWarnings = FALSE)
@@ -55,7 +55,7 @@ for (nm in names(qb)) {
 
 legend("topright",
        legend = c("Scotese (2016)", "Torsvik & Cocks (2017)",
-                  "Müller et al. (2022)", "Cao et al. (2024)"),
+                  "Merdith et al. (2021)", "Cao et al. (2024)"),
        col = line, lwd = 2, bty = "n", seg.len = 3, cex = 0.8)
 
 invisible(dev.off())

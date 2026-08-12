@@ -217,24 +217,45 @@ col_mmed <- "darkred"
 xlab_expr <- expression(paste(epsilon["NSB"], " (", "\u2030", " VPDB)"))
 ylab_str <- "Probability density"
 
+plot_data <- vector("list", length(families))
+
 for (i in seq_along(families)) {
   stem <- families[i]
-  
   draws_mat <- get_site_draws(inv.out, stem)
   dpost <- avg_site_density(draws_mat)
-  
   xprior <- prior_draws[[stem]]
   dprior <- density(xprior)
-  
-  xlo <- min(dprior$x, dpost$x, na.rm = TRUE)
-  xhi <- max(dprior$x, dpost$x, na.rm = TRUE)
-  ymax <- 1.05 * max(dprior$y, dpost$y, na.rm = TRUE)
+
+  plot_data[[i]] <- list(
+    draws_mat = draws_mat,
+    dpost = dpost,
+    xprior = xprior,
+    dprior = dprior,
+    xlo = min(dprior$x, dpost$x, na.rm = TRUE),
+    xhi = max(dprior$x, dpost$x, na.rm = TRUE),
+    ymax = 1.05 * max(dprior$y, dpost$y, na.rm = TRUE)
+  )
+}
+
+row_ymax <- vapply(seq(1, length(families), by = 2), function(i) {
+  max(plot_data[[i]]$ymax, plot_data[[i + 1]]$ymax)
+}, numeric(1))
+
+for (i in seq_along(families)) {
+  stem <- families[i]
+  draws_mat <- plot_data[[i]]$draws_mat
+  dpost <- plot_data[[i]]$dpost
+  xprior <- plot_data[[i]]$xprior
+  dprior <- plot_data[[i]]$dprior
+  xlo <- plot_data[[i]]$xlo
+  xhi <- plot_data[[i]]$xhi
+  ymax <- row_ymax[ceiling(i / 2)]
   
   plot(NA, xlim = c(xlo, xhi), ylim = c(0, ymax),
        xlab = "", ylab = "", axes = FALSE)
 
   axis(1)
-  axis(2, labels = i %% 2 == 1, las = 1)
+  axis(2, las = 1)
   box()
   if (i %in% c(9, 10)) mtext(xlab_expr, side = 1, line = 1.0, cex = 0.72)
   

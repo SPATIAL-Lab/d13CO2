@@ -2,6 +2,12 @@
 
 Bayesian proxy-system model for reconstructing the carbon-isotope composition of Phanerozoic atmospheric CO2 from marine carbonate records. The model was developed by Dustin Harper and Gabriel Bowen with input from the Phanerozoic CO2 Proxy Integration Project community.
 
+## Citation
+
+Harper, D. T., and Bowen, G. J. (2026). d13CO2: Data, model output, and code for “Reconstructing the carbon isotope composition of the Phanerozoic atmosphere” (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.21910191
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21910191.svg)](https://doi.org/10.5281/zenodo.21910191)
+
 ## Software
 
 The definitive analysis used JAGS 4.3.1 with four parallel chains. The R workflow requires `R2jags`, `rjags`, and `coda`; figure generation additionally uses `biwavelet`, `readxl`, and `viridisLite`. The preprocessing scripts use `dplyr`, `openxlsx`, and `ncdf4`. Run all commands from the repository root.

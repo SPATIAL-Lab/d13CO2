@@ -4,7 +4,7 @@ Bayesian proxy-system model for reconstructing the carbon-isotope composition of
 
 ## Citation
 
-Harper, D. T., and Bowen, G. J. (2026). d13CO2: Data, model output, and code for “Reconstructing the carbon isotope composition of the Phanerozoic atmosphere” (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.21910191
+Harper, D. T., and Bowen, G. J. (2026). d13CO2: Definitive Phanerozoic reconstruction, coauthor review cleanup (v1.0.1). Zenodo. https://doi.org/10.5281/zenodo.21910191
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21910191.svg)](https://doi.org/10.5281/zenodo.21910191)
 

@@ -118,7 +118,7 @@ To regenerate the figures from the distributed results without rerunning JAGS, s
 
 - [Cramer and Jarvis (2020)](https://doi.org/10.1016/B978-0-12-824360-2.00011-5)
 - [Gradstein et al. (2020), *Geologic Time Scale 2020*](https://doi.org/10.1016/C2018-0-02379-3)
-- [Grossman et al. (2025)](https://doi.org/10.1073/pnas.2424291122) and [StabisoDB](https://stabisodb.org/)
+- [Grossman et al. (2020)](https://doi.org/10.1130/abs/2020AM-358296) and [StabisoDB](https://stabisodb.org/)
 - [Judd et al. (2024)](https://doi.org/10.1126/science.adk3705)
 - [Li et al. (2022)](https://doi.org/10.1038/s41597-022-01490-4)
 - [Merdith et al. (2021)](https://doi.org/10.1016/j.earscirev.2020.103477)

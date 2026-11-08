@@ -3,7 +3,6 @@ legacy/
 
 # Generated model and figure outputs
 output/
-prelim_figs/
 Rplots.pdf
 
 # R session and project state

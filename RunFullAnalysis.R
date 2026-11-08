@@ -1,4 +1,4 @@
-# Run the definitive model suite and generate Figures 2-9
+# Run the definitive model suite and generate Figures 2-8 and S1
 
 # Choose the folder created under output/model_runs and used by the figures.
 if (!exists("model.run", inherits = FALSE)) {

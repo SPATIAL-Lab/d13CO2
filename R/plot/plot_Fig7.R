@@ -52,10 +52,10 @@ col_li_prior_fill <- adjustcolor("#4575B4", 0.35)
 col_li_prior_line <- "#4575B4"
 
 dir.create(figure.output.root, recursive = TRUE, showWarnings = FALSE)
-cairo_pdf(file.path(figure.output.root, "Figure7_GMST_sensitivity.pdf"), width = 5.735804, height = 3.639535)
+cairo_pdf(file.path(figure.output.root, "Figure7_GMST_sensitivity.pdf"), width = 5.735804, height = 4.239535)
 op <- par(no.readonly = TRUE)
 par(xaxs = "i", yaxs = "i")
-layout(matrix(1:3, ncol = 1), heights = c(3.2, 3.2, 3.0))
+layout(matrix(c(3, 2, 1, 4), ncol = 1), heights = c(3.2, 3.2, 3.0, lcm(1.399647)))
 
 panel_lab <- function(lab) {
   usr <- par("usr")
@@ -63,9 +63,9 @@ panel_lab <- function(lab) {
        lab, adj = c(0, 1), font = 2)
 }
 
-## ----- (1) TOP: d13C_CO2 posteriors -----
-par(mar = c(0.5, 5.0, 2.2, 1.8))
-ylab_d13 <- expression(delta^13*C[CO[2]]~"(" * "‰" * ")")
+## ----- (3) BOTTOM: d13C_a posteriors -----
+par(mar = c(0.5, 5.0, 0.8, 1.8))
+ylab_d13 <- expression(delta^13*C[a]~"(" * "‰" * ")")
 ylim_top <- range(d13_Phan$q025[idx], d13_Phan$q975[idx],
                   d13_Li$q025[idx], d13_Li$q975[idx], na.rm = TRUE)
 plot(NA, xlim = xlim_all, ylim = ylim_top, xlab = "", ylab = ylab_d13, xaxt = "n", yaxt = "s")
@@ -76,9 +76,7 @@ lines(x_common, d13_Phan$med[idx], col = col_phan_ts_line, lwd = 1.2)
 polygon(c(x_common, rev(x_common)), c(d13_Li$q025[idx], rev(d13_Li$q975[idx])),
         col = col_li_ts_fill, border = NA)
 lines(x_common, d13_Li$med[idx], col = col_li_ts_line, lwd = 1.2)
-legend("topright", legend = c("PhanDA GMST", "Scotese21/Li22 GMST"),
-       fill = c(col_phan_ts_fill, col_li_ts_fill), border = NA, bty = "n")
-panel_lab("a.")
+panel_lab("C.")
 
 ## ----- (2) MIDDLE: GMST posteriors -----
 par(mar = c(0.5, 5.0, 0.8, 1.8))
@@ -93,15 +91,15 @@ lines(x_common, gmst_Phan$med[idx], col = col_phan_ts_line, lwd = 1.2)
 polygon(c(x_common, rev(x_common)), c(gmst_Li$q025[idx], rev(gmst_Li$q975[idx])),
         col = col_li_ts_fill, border = NA)
 lines(x_common, gmst_Li$med[idx], col = col_li_ts_line, lwd = 1.2)
-legend("topright", legend = c("PhanDA GMST", "Scotese21/Li22 GMST"),
+legend("bottomright", legend = c("PhanDA GMST", "Scotese21/Li22 GMST"),
        fill = c(col_phan_ts_fill, col_li_ts_fill), border = NA, bty = "n")
-panel_lab("b.")
+panel_lab("B.")
 
-## ----- (3) BOTTOM: GMST priors -----
-par(mar = c(3.6, 5.0, 0.8, 1.8))
+## ----- (1) TOP: GMST priors -----
+par(mar = c(0.5, 5.0, 2.2, 1.8))
 ylim_bot <- range(GMST.low[idx], GMST.hi[idx], GMST.low.Li[idx], GMST.hi.Li[idx], na.rm = TRUE)
-plot(x_common, phan$GMST.m[idx], type = "n", xlab = "age (Ma)", ylab = ylab_gmst,
-     xlim = xlim_all, ylim = ylim_bot)
+plot(x_common, phan$GMST.m[idx], type = "n", xlab = "", ylab = ylab_gmst,
+     xlim = xlim_all, ylim = ylim_bot, xaxt = "n")
 grid(nx = NA, ny = NULL)
 polygon(c(x_common, rev(x_common)), c(GMST.low[idx], rev(GMST.hi[idx])),
         col = col_phan_prior_fill, border = NA)
@@ -109,8 +107,32 @@ lines(x_common, phan$GMST.m[idx], col = col_phan_prior_line, lwd = 1.5)
 polygon(c(x_common, rev(x_common)), c(GMST.low.Li[idx], rev(GMST.hi.Li[idx])),
         col = col_li_prior_fill, border = NA)
 lines(x_common, li$GMST.m[idx], col = col_li_prior_line, lwd = 1.5)
-legend("topleft", legend = c("PhanDA GMST prior", "Scotese21/Li22 GMST prior"),
+legend("top", legend = c("PhanDA GMST prior", "Scotese21/Li22 GMST prior"),
        fill = c(col_phan_prior_fill, col_li_prior_fill), border = NA, bty = "n", inset = 0.01)
-panel_lab("c.")
+panel_lab("A.")
+
+## GSA timescale strip
+par(mar = c(2.6, 5.0, 0.1, 1.8))
+
+gsa <- data.frame(
+  from = c(0.00, 2.58, 23.03, 66.00, 145.00, 201.30, 251.90, 298.90, 358.90, 419.20, 443.80, 485.40),
+  to = c(2.58, 23.03, 66.00, 145.00, 201.30, 251.90, 298.90, 358.90, 419.20, 443.80, 485.40, 540.00),
+  lab = c("Q", "Ng", "Pg", "K", "J", "Tr", "P", "C", "D", "S", "O", "Є"),
+  col = c("#FFF2A6", "#FFD37F", "#FFAB70", "#7FC64E", "#34B2C9", "#812B92", "#F04028", "#67A599", "#CB8C37", "#B3E1B6", "#009270", "#7FA056")
+)
+
+plot(NA, xlim = xlim_all, ylim = c(0,1), xaxt = "n", yaxt = "n",
+     xlab = "", ylab = "", bty = "n")
+
+for (i in seq_len(nrow(gsa))) {
+  rect(gsa$to[i], 0, gsa$from[i], 1, col = gsa$col[i], border = NA)
+}
+box()
+for (i in seq_len(nrow(gsa))) {
+  text((gsa$from[i] + gsa$to[i]) / 2, 0.5, gsa$lab[i], cex = 0.8, adj = c(ifelse(i == 1, 1, 0.5), 0.5), xpd = NA)
+}
+
+axis(1)
+mtext("Age (Ma)", side = 1, line = 1.7)
 
 invisible(dev.off())

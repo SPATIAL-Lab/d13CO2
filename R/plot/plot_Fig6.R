@@ -5,7 +5,7 @@
 # Script to generate Figure 6 in manuscript: late Cenozoic plant wax, atmospheric d13C, 
 # fractionation, CO2, and GMST plot
 
-# Plant wax d13C, atmospheric d13C from model posterior, leaf-atmosphere fractionation,
+# Plant wax d13C, atmospheric d13C from model posterior, atmosphere-leaf fractionation,
 # atmospheric CO2 reconstruction, and GMST anomaly reconstruction
 
 # Assumes objects already exist in the environment:
@@ -27,9 +27,9 @@ library(readxl)
 
 age.max <- 31.5
 
-Delta_C3 <- -24.7
-Delta_wsC3 <- -21.8
-Delta_C4 <- -15.1
+Delta_C3 <- 24.7
+Delta_wsC3 <- 21.8
+Delta_C4 <- 15.1
 
 ####################################################################################################
 ####################################################################################################
@@ -39,6 +39,11 @@ Delta_C4 <- -15.1
 # Plant wax d13C data
 ####################################################################################################
 dat <- read_excel("data/raw/lateCenozoic_plantwax_d13C.xlsx", sheet = "my_comp", col_names = TRUE)
+
+schartman <- read.csv("data/processed/Schartman2026_plantwax_raw.csv",
+                      stringsAsFactors = FALSE)
+schartman <- schartman[schartman$include_CPI, ]
+dat <- rbind(dat, schartman[, names(dat)])
 
 dat$age <- as.numeric(dat$age)
 dat$d13C <- as.numeric(dat$d13C)
@@ -134,13 +139,15 @@ dat$group[grepl("^SouthChinaSea", dat$category)] <- "SouthChinaSea"
 dat$group[grepl("^marine", dat$category)] <- "marine"
 dat$group[grepl("^terrestrial", dat$category)] <- "terrestrial"
 
-dat$env[dat$group %in% c("marine", "DSDP94_C31", "DSDP94_C29", "SouthChinaSea")] <- "marine"
+dat$group[dat$category == "Schartman_C31"] <- "Schartman_C31"
+
+dat$env[dat$group %in% c("Schartman_C31", "marine", "DSDP94_C31", "DSDP94_C29", "SouthChinaSea")] <- "marine"
 dat$env[dat$group %in% c("terrestrial", "Africa")] <- "terrestrial"
 dat$env[dat$group %in% c("lacustrine")] <- "lacustrine"
 
 dat <- dat[!is.na(dat$group) & !is.na(dat$env), ]
 
-group_levels <- c("marine", "lacustrine", "terrestrial", "DSDP94_C31", "DSDP94_C29", "Africa", "SouthChinaSea")
+group_levels <- c("marine", "lacustrine", "terrestrial", "DSDP94_C31", "DSDP94_C29", "Africa", "SouthChinaSea", "Schartman_C31")
 dat$group <- factor(dat$group, levels = group_levels)
 
 env_levels <- c("marine", "terrestrial", "lacustrine")
@@ -157,9 +164,9 @@ dat$d13C_atm <- approx(
   rule = 1
 )$y
 
-dat$Delta <- dat$d13C - dat$d13C_atm
+dat$Delta <- dat$d13C_atm - dat$d13C
 dat$d13C_atm_Tipple <- approx(tipple$age, tipple$d13Ca, xout = dat$age, rule = 1)$y
-dat$Delta_Tipple <- dat$d13C - dat$d13C_atm_Tipple
+dat$Delta_Tipple <- dat$d13C_atm_Tipple - dat$d13C
 
 
 ####################################################################################################
@@ -172,7 +179,8 @@ group_pchs <- c(
   DSDP94_C31 = 0,
   DSDP94_C29 = 2,
   Africa = 18,
-  SouthChinaSea = 1
+  SouthChinaSea = 1,
+  Schartman_C31 = 5
 )
 
 group_cols_plot <- c(
@@ -182,7 +190,8 @@ group_cols_plot <- c(
   DSDP94_C31 = "#2C7FB8",
   DSDP94_C29 = "#2C7FB8",
   Africa = "#B35806",
-  SouthChinaSea = "#2C7FB8"
+  SouthChinaSea = "#2C7FB8",
+  Schartman_C31 = "#984EA3"
 )
 
 group_labels <- c(
@@ -192,7 +201,8 @@ group_labels <- c(
   DSDP94_C31 = "DSDP 94 (C31) - Tipple and Pagani (2010)",
   DSDP94_C29 = "DSDP 94 (C29) - Tipple and Pagani (2010)",
   Africa = "African sites - Peppe et al. (2023)",
-  SouthChinaSea = "South China Sea sites - Zhou et al. (2017)"
+  SouthChinaSea = "South China Sea sites - Zhou et al. (2017)",
+  Schartman_C31 = "NW Africa (C31) - Schartman et al. (2026)"
 )
 
 cats <- levels(dat$group)
@@ -207,9 +217,9 @@ cex_panel <- 1.22
 cex_ref <- 0.78
 
 ylab_a <- expression(delta^13*C[wax]~"(‰ VPDB)")
-ylab_b <- expression(delta^13*C[CO[2]]~"(‰ VPDB)")
-ylab_c <- expression(Delta[leaf-atm] ~ "(" * "\u2030" ~ VPDB * ")")
-ylab_d <- expression(paleo-CO[2] ~ "(ppm)")
+ylab_b <- expression(delta^13*C[a]~"(‰ VPDB)")
+ylab_c <- expression(Delta[atm-leaf] ~ "(" * "\u2030" ~ VPDB * ")")
+ylab_d <- expression(CO[2] ~ "(ppm)")
 ylab_e <- expression("GMST anomaly (" * degree * "C)")
 
 
@@ -252,7 +262,7 @@ par(
 
 
 ####################################################################################################
-# Panel a: Plant wax d13C
+# Panel A: Plant wax d13C
 ####################################################################################################
 par(mar = c(0.4, 5.2, 0.2, 5.2))
 
@@ -305,14 +315,15 @@ legend(
   col = group_cols_plot[cats],
   pt.bg = group_cols_plot[cats],
   bty = "n",
-  cex = 0.78
+  cex = 0.65,
+  y.intersp = 0.75
 )
 
-panel_lab("a.", xlim, ylim_a)
+panel_lab("A.", xlim, ylim_a)
 
 
 ####################################################################################################
-# Panel b: d13CCO2 with credible intervals
+# Panel B: d13Ca with credible intervals
 ####################################################################################################
 par(mar = c(0.4, 5.2, 0.2, 5.2))
 
@@ -362,11 +373,11 @@ box(lwd = 1)
 
 mtext(ylab_b, side = 4, line = 3, cex = cex_lab)
 
-panel_lab("b.", xlim, ylim_b)
+panel_lab("B.", xlim, ylim_b)
 
 
 ####################################################################################################
-# Panel c: Photosynthetic fractionation
+# Panel C: Photosynthetic fractionation
 ####################################################################################################
 par(mar = c(0.4, 5.2, 0.2, 5.2))
 
@@ -434,7 +445,7 @@ for (i in seq_along(cats)) {
 
 legend("bottomleft", legend = "Tipple et al. (2010) Fig. 4-based",
        col = gray(0.4), pch = 1, pt.cex = 0.75,
-       inset = c(0.055, 0.01), bty = "n", cex = 0.7)
+       inset = c(0.12, 0.12), bty = "n", cex = 0.7)
 
 axis(1, at = x_major, labels = FALSE, tck = major_tick, cex.axis = cex_axis)
 axis(2, at = y_major_c, las = 1, tck = major_tick, cex.axis = cex_axis)
@@ -450,11 +461,11 @@ box(lwd = 1)
 
 mtext(ylab_c, side = 2, line = 3, cex = cex_lab)
 
-panel_lab("c.", xlim, ylim_c)
+text(age.max - 1.1, ylim_c[1] + 0.35, "C.", font = 2, cex = cex_panel, adj = c(0, 0))
 
 
 ####################################################################################################
-# Panel d: Atmospheric CO2 with credible intervals
+# Panel D: Atmospheric CO2 with credible intervals
 ####################################################################################################
 par(mar = c(0.4, 5.2, 0.2, 5.2))
 
@@ -491,24 +502,24 @@ polygon(
 lines(co2$age, co2$CO2_50, col = gray(0.2), lwd = 2)
 
 axis(1, at = x_major, labels = FALSE, tck = major_tick, cex.axis = cex_axis)
-axis(2, at = y_major_d, las = 1, tck = major_tick, cex.axis = cex_axis)
+axis(4, at = y_major_d, las = 1, tck = major_tick, cex.axis = cex_axis)
 axis(3, at = x_major, labels = FALSE, tck = major_tick, cex.axis = cex_axis)
-axis(4, at = y_major_d, labels = FALSE, tck = major_tick, cex.axis = cex_axis)
+axis(2, at = y_major_d, labels = FALSE, tck = major_tick, cex.axis = cex_axis)
 
 axis(1, at = x_minor, labels = FALSE, tck = minor_tick)
-axis(2, at = y_minor_d, labels = FALSE, tck = minor_tick)
-axis(3, at = x_minor, labels = FALSE, tck = minor_tick)
 axis(4, at = y_minor_d, labels = FALSE, tck = minor_tick)
+axis(3, at = x_minor, labels = FALSE, tck = minor_tick)
+axis(2, at = y_minor_d, labels = FALSE, tck = minor_tick)
 
 box(lwd = 1)
 
-mtext(ylab_d, side = 2, line = 3, cex = cex_lab)
+mtext(ylab_d, side = 4, line = 3, cex = cex_lab)
 
-panel_lab("d.", xlim, ylim_d)
+panel_lab("D.", xlim, ylim_d)
 
 
 ####################################################################################################
-# Panel e: GMST anomaly with credible intervals
+# Panel E: GMST anomaly with credible intervals
 ####################################################################################################
 par(mar = c(3.0, 5.2, 0.2, 5.2))
 
@@ -545,20 +556,20 @@ polygon(
 lines(gmst$age, gmst$GMST_50, col = "firebrick", lwd = 2)
 
 axis(1, at = x_major, tck = major_tick, cex.axis = cex_axis)
-axis(2, at = y_major_e, labels = FALSE, tck = major_tick, cex.axis = cex_axis)
+axis(4, at = y_major_e, labels = FALSE, tck = major_tick, cex.axis = cex_axis)
 axis(3, at = x_major, labels = FALSE, tck = major_tick, cex.axis = cex_axis)
-axis(4, at = y_major_e, las = 1, tck = major_tick, cex.axis = cex_axis)
+axis(2, at = y_major_e, las = 1, tck = major_tick, cex.axis = cex_axis)
 
 axis(1, at = x_minor, labels = FALSE, tck = minor_tick)
-axis(2, at = y_minor_e, labels = FALSE, tck = minor_tick)
-axis(3, at = x_minor, labels = FALSE, tck = minor_tick)
 axis(4, at = y_minor_e, labels = FALSE, tck = minor_tick)
+axis(3, at = x_minor, labels = FALSE, tck = minor_tick)
+axis(2, at = y_minor_e, labels = FALSE, tck = minor_tick)
 
 box(lwd = 1)
 
-mtext("Age (Ma)", side = 1, line = 2.4, cex = cex_lab)
-mtext(ylab_e, side = 4, line = 3, cex = cex_lab)
+mtext("Age (Ma)", side = 1, line = 1.8, cex = cex_lab)
+mtext(ylab_e, side = 2, line = 3, cex = cex_lab)
 
-panel_lab("e.", xlim, ylim_e)
+panel_lab("E.", xlim, ylim_e)
 
 invisible(dev.off())

@@ -2,10 +2,10 @@
 
 ####################################################################################################
 ####################################################################################################
-# Script to generate Figure 5 in manuscript: multipanel d13CO2, d13Corg, Delta, correlation, CO2, 
+# Script to generate Figure 5 in manuscript: multipanel d13CO2, d13Corg, Delta, CO2, correlation,
 # and timescale plot
 
-# d13CO2 posterior draws, plant d13Corg, d13Corg - d13CO2, windowed correlations,
+# d13CO2 posterior draws, plant d13Corg, d13CO2 - d13Corg, windowed correlations,
 # Foster et al. CO2, GSA period strip, and shared bottom x-axis 
 
 # Assumes objects already exist in the environment:
@@ -94,8 +94,8 @@ org_sd[org_n < 2] <- NA_real_
 d13CO2_at_org <- approx(x = ages_Ma, y = d13CO2_med, xout = org_age, rule = 2)$y
 d13CO2_sd_at_org <- approx(x = ages_Ma, y = co2_sigma, xout = org_age, rule = 2)$y
 
-Dorg_atm <- org_mu - d13CO2_at_org
-diff_series <- Dorg_atm
+Datm_org <- d13CO2_at_org - org_mu
+diff_series <- Datm_org
 
 sigma_delta <- sqrt(d13CO2_sd_at_org^2 + org_sd^2)
 delta_hw95 <- 1.96 * sigma_delta
@@ -178,7 +178,7 @@ min_n <- 15
 
 cor_linear <- window_cor(
   age = org_age,
-  x = Dorg_atm,
+  x = Datm_org,
   y = CO2_at_org,
   window_width = window_width,
   step = window_step,
@@ -188,7 +188,7 @@ cor_linear <- window_cor(
 
 cor_log <- window_cor(
   age = org_age,
-  x = Dorg_atm,
+  x = Datm_org,
   y = log_CO2_at_org,
   window_width = window_width,
   step = window_step,
@@ -212,18 +212,18 @@ cairo_pdf(file.path(figure.output.root, "Figure5.pdf"), width = 5.651163, height
 
 op <- par(no.readonly = TRUE)
 
-layout(matrix(1:7, ncol = 1), heights = c(3.6, 3.0, 3.2, 3.0, 3.0, 0.9, 1.5))
+layout(matrix(c(1:3, 5, 4, 6:7), ncol = 1), heights = c(3.6, 3.0, 3.2, 3.0, 3.0, 0.9, 1.5))
 par(xaxs = "i", yaxs = "i")
 
 xlim <- c(358, 0)
 ticks10 <- seq(0, 360, by = 10)
 ticks50 <- seq(0, 350, by = 50)
 
-y_sides <- c(2, 4, 2, 4, 2)
+y_sides <- c(2, 4, 2, 2, 4)
 
-y_labs <- c(expression(delta^13*C[CO[2]]~"(" * "\u2030 VPDB" * ")"),
+y_labs <- c(expression(delta^13*C[a]~"(" * "\u2030 VPDB" * ")"),
             expression(delta^13*C[org]~"(" * "\u2030 VPDB" * ")"),
-            expression(Delta[org-atm]~"(" * "\u2030 VPDB" * ")"),
+            expression(Delta[atm-org]~"(" * "\u2030 VPDB" * ")"),
             "windowed r",
             expression(CO[2]~"(ppm)"))
 
@@ -280,7 +280,7 @@ panel_lab("b.")
 
 
 ####################################################################################################
-## Third panel: d13Corg - d13CO2 with uncertainty
+## Third panel: d13CO2 - d13Corg with uncertainty
 ####################################################################################################
 par(mar = c(0.6, 5.2, 0.6, 5.2))
 
@@ -291,7 +291,7 @@ yl3_2shi <- diff_series + delta_hw2sdorg
 yl3_2slo <- diff_series - delta_hw2sdorg
 yl3_all <- range(c(yl3_core, yl3_95hi, yl3_95lo, yl3_2shi, yl3_2slo), na.rm = TRUE)
 pad <- diff(range(yl3_all)) * 0.08
-yl3 <- c(-27, -10) #yl3_all + c(-pad, pad)
+yl3 <- c(10, 27) #yl3_all + c(-pad, pad)
 
 plot(NA, xlim = xlim, ylim = yl3, xaxt = "n", yaxt = "n", xlab = "", ylab = "")
 grid(nx = NA, ny = NULL)
@@ -327,9 +327,9 @@ panel_lab("c.")
 
 
 ####################################################################################################
-## Fourth panel: windowed correlations
+## Fifth panel: windowed correlations
 ####################################################################################################
-par(mar = c(0.6, 5.2, 0.6, 5.2))
+par(mar = c(0.2, 5.2, 0.6, 5.2))
 
 yl4 <- c(-1, 1)
 
@@ -344,12 +344,12 @@ lines(cor_out$age, cor_out$r_Dorg_logCO2, lwd = 2, col = "firebrick")
 
 axis(y_sides[4])
 mtext(y_labs[4], side = y_sides[4], line = 2.8)
-panel_lab("d.")
+panel_lab("e.")
 
 legend("bottomleft",
        inset = 0.02,
-       legend = c(expression(Delta[org-atm]~"vs."~CO[2]),
-                  expression(Delta[org-atm]~"vs. log"~CO[2])),
+       legend = c(expression(Delta[atm-org]~"vs."~CO[2]),
+                  expression(Delta[atm-org]~"vs. log"~CO[2])),
        lwd = 2,
        col = c("black", "firebrick"),
        bty = "n",
@@ -357,9 +357,9 @@ legend("bottomleft",
 
 
 ####################################################################################################
-## Fifth panel: Foster et al. CO2
+## Fourth panel: Foster et al. CO2
 ####################################################################################################
-par(mar = c(0.2, 5.2, 0.6, 5.2))
+par(mar = c(0.6, 5.2, 0.6, 5.2))
 
 yl5 <- c(100, 3500)
 
@@ -378,7 +378,7 @@ lines(x, co2$mu, lwd = 2)
 
 axis(y_sides[5])
 mtext(y_labs[5], side = y_sides[5], line = 2.8)
-panel_lab("e.")
+panel_lab("d.")
 
 
 ####################################################################################################
@@ -416,6 +416,6 @@ plot(NA, xlim = xlim, ylim = c(0,1), xaxt = "n", yaxt = "n",
 axis(1, at = ticks10, labels = FALSE)
 axis(1, at = ticks50, labels = ticks50, tick = FALSE)
 
-mtext("Age (Ma)", side = 1, line = 1.5)
+mtext("Age (Ma)", side = 1, line = 1.6, cex = 0.65)
 
 invisible(dev.off())

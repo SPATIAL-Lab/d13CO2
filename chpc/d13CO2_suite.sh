@@ -13,17 +13,16 @@
 
 profiles=(main gmst_scotese plate_torsvik2017 plate_merdith2021 plate_cao2024 cenozoic coupled)
 
-export WORK_DIR="/uufs/chpc.utah.edu/common/home/bowen-group3/dth/d13CO2"
+export WORK_DIR="${WORK_DIR:-${SLURM_SUBMIT_DIR:-$PWD}}"
 export RUN_PROFILE="${profiles[$SLURM_ARRAY_TASK_ID]}"
 export D13CO2_MODEL_RUN="${D13CO2_MODEL_RUN:-definitive}"
 export R_SCRIPT_PATH="${WORK_DIR}/R/model/d13CO2_RunAll.R"
-export R_LIBS_USER="/uufs/chpc.utah.edu/common/home/u6041364/R/x86_64-redhat-linux-gnu-library/4.5"
 
 module load gcc/8.5.0
 module load jags
 module load R
 
-cd "$WORK_DIR"
+cd "$WORK_DIR" || exit 1
 echo "Starting ${D13CO2_MODEL_RUN}/${RUN_PROFILE} at $(date)"
 Rscript "$R_SCRIPT_PATH"
 echo "Finished ${D13CO2_MODEL_RUN}/${RUN_PROFILE} at $(date)"

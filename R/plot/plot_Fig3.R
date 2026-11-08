@@ -69,16 +69,17 @@ peak.period <- period[peak.index]
 dir.create(dirname(figure.file), recursive = TRUE, showWarnings = FALSE)
 pdf(figure.file, width = 7.2, height = 8.5)
 
-op <- par(mfrow = c(2, 1), mar = c(4, 4.5, 1.5, 1.5))
+op <- par(mfrow = c(2, 1), mar = c(4, 4.5, 1.5, 1.5), cex = 1.1)
 
 plot(wavelet.result, type = "power", xlab = "Age (Ma)",
+     xlim = rev(range(wavelet.data[, 1])),
      ylab = "Period (Myr)", main = "", plot.coi = TRUE,
      plot.sig = TRUE, lwd.sig = 1.2, col.sig = "white")
 abline(h = log2(peak.period), col = "white", lty = 2, lwd = 1.2)
 text(max(wavelet.data[, 1]), log2(peak.period),
-     paste0(round(peak.period, 1), " Myr"), pos = 2,
+     "~66 Myr", pos = 4,
      col = "white", font = 2)
-mtext("A", side = 3, adj = 0, line = 0.2, font = 2)
+mtext("A.", side = 3, adj = 0, line = 0.2, font = 2, cex = 1.2)
 
 x.range <- range(c(0, power.lower, power.upper, global.power,
                    global.signif[peak.index]), finite = TRUE)
@@ -96,14 +97,14 @@ segments(global.signif[peak.index], peak.period,
 points(power.median[peak.index], peak.period, pch = 19,
        col = "#0072B2", cex = 1.1)
 text(power.median[peak.index], peak.period,
-     paste0(round(peak.period, 1), " Myr"), pos = 4, font = 2)
+     "~66 Myr", pos = 4, font = 2)
 legend("bottomright",
        c("Posterior median", "95% posterior interval",
-         "Median-series power", "95% threshold at 66.1 Myr"),
+         "Median-series power", "95% threshold at ~66 Myr"),
        col = c("#0072B2", adjustcolor("#0072B2", alpha.f = 0.20),
                "black", "grey40"),
        lwd = c(2, 8, 1.2, 1.2), lty = c(1, 1, 1, 2), bty = "n", cex = 0.82)
-mtext("B", side = 3, adj = 0, line = 0.2, font = 2)
+mtext("B.", side = 3, adj = 0, line = 0.2, font = 2, cex = 1.2)
 
 par(op)
 dev.off()

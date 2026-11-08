@@ -49,7 +49,7 @@ cairo_pdf(file.path(figure.output.root, "Figure2.pdf"), width = 6.560629, height
 
 op <- par(no.readonly = TRUE)
 
-layout(matrix(1:4, ncol = 1), heights = c(3.8, 3.6, 0.9, 1.2))
+layout(matrix(1:4, ncol = 1), heights = c(3.8, 3.6, 0.45, 2.55))
 par(xaxs = "i", yaxs = "i")
 
 # ticks every 10 Ma; show numeric labels every 50 Ma
@@ -59,7 +59,7 @@ ticks50 <- seq(0, 540, by = 50)
 
 # y-axis sides/labels
 y_side_top <- 2
-y_lab_top <- expression(delta^13*C[CO[2]]~"(‰ VPDB)")
+y_lab_top <- expression(delta^13*C[a]~"(‰ VPDB)")
 y_side_bot <- 4
 y_lab_bot <- expression(delta^13*C[carb]~"(‰ VPDB)")
 
@@ -143,7 +143,7 @@ xlim_raw <- c(max(prox_age_Ma, na.rm = TRUE),
 plot(NA, xlim = xlim_raw, ylim = yl2, xaxt = "n", yaxt = "n", xlab = "", ylab = "")
 grid(nx = NA, ny = NULL)
 
-# Color by site-mean paleolat & paleolon using viridis (2D via bins) 
+# Color by site-mean paleolat & paleolon
 
 # Compute mean paleolat/paleolon per site
 site_lat <- tapply(prox.in$paleolat[ok], prox.in$site.index[ok], mean, na.rm = TRUE)
@@ -156,10 +156,10 @@ lon_bins <- c(-180, -90, 0, 90, 180)
 n_lat <- length(lat_bins) - 1
 n_lon <- length(lon_bins) - 1
 
-# Precompute a viridis color grid over (lat_bin, lon_bin)
-# low lat (equator) → yellow-ish; high lat (poles) → blue-ish
-col_vec <- viridisLite::viridis(n_lat * n_lon, option = "D")
-grid_cols <- matrix(col_vec, nrow = n_lat, ncol = n_lon, byrow = TRUE)
+# Latitude families; longitude from light to dark
+grid_cols <- rbind(c("#F5C68A", "#E7A04B", "#C77B20", "#925410"),
+                   c("#9DCBE2", "#65ADD0", "#2786B1", "#00618A"),
+                   c("#D9B6D5", "#BF8AB9", "#9F6198", "#784373"))
 
 # Function to map continuous lat/lon to nearest bin and get color
 latlon_to_col <- function(lat, lon) {
@@ -170,9 +170,7 @@ latlon_to_col <- function(lat, lon) {
   # clamp to 1..n
   lat_idx[lat_idx < 1] <- 1; lat_idx[lat_idx > n_lat] <- n_lat
   lon_idx[lon_idx < 1] <- 1; lon_idx[lon_idx > n_lon] <- n_lon
-  # flip latitude index so low lat uses high viridis (yellow), high lat uses low (blue)
-  lat_idx2 <- n_lat - lat_idx + 1
-  grid_cols[cbind(lat_idx2, lon_idx)]
+  grid_cols[cbind(lat_idx, lon_idx)]
 }
 
 # Site-level colors
@@ -221,10 +219,10 @@ x_right <- xlim_raw[2]
 y_min <- yl2[1]
 y_max <- yl2[2]
 
-x_leg_left <- x_left + 0.02 * (x_right - x_left)
-x_leg_right <- x_left + 0.26 * (x_right - x_left)
-y_leg_bottom <- y_min  + 0.02 * (y_max  - y_min)
-y_leg_top <- y_min  + 0.24 * (y_max  - y_min)
+x_leg_left <- x_left + 0.08 * (x_right - x_left)
+x_leg_right <- x_left + 0.32 * (x_right - x_left)
+y_leg_bottom <- y_min  + 0.08 * (y_max  - y_min)
+y_leg_top <- y_min  + 0.28 * (y_max  - y_min)
 
 dx <- (x_leg_right - x_leg_left) / (n_lon + 0.1)
 dy <- (y_leg_top - y_leg_bottom) / (n_lat + 0.1)
@@ -249,14 +247,14 @@ for (i in seq_len(n_lat)) {
 for (i in seq_len(n_lat)) {
   y_mid <- y_leg_bottom + dy * (i + 0.32)
   text(x_leg_left - dx * 0.015, y_mid, lat_labels[i],
-       adj = c(1, 0.5), cex = 1.0)
+       adj = c(1, 0.5), cex = 0.55)
 }
 
 # Lon labels (columns) below grid
 for (j in seq_len(n_lon)) {
   x_mid <- x_leg_left + dx * (j + 0.32)
   text(x_mid, y_leg_bottom - dy * 0.02, lon_labels[j],
-       adj = c(0.5, 1), cex = 1.0, srt = 30)
+       adj = c(0.5, 1), cex = 0.5, srt = 30)
 }
 
 # Small symbol legend for recoded category 
@@ -265,30 +263,30 @@ legend("bottomright",
        legend = cat_levels,
        pch    = cat_pch_map[cat_levels],
        col    = "black",
-       pt.cex = 1.05,
-       cex    = 1.05,
+       pt.cex = 0.65,
+       cex    = 0.55,
        bty    = "n",
        title  = NULL)
 
 # GSA timescale strip 
-par(mar = c(0.1, 5.2, 0.1, 5.2))
+par(mar = c(0.05, 5.2, 0.05, 5.2))
 
 gsa <- data.frame(
   from = c(  0.00,   2.58,  23.03,  66.00, 145.00, 201.30, 251.90, 298.90, 358.90, 419.20, 443.80, 485.40),
   to   = c(  2.58,  23.03,  66.00, 145.00, 201.30, 251.90, 298.90, 358.90, 419.20, 443.80, 485.40, 540.00),
   lab  = c("Q", "Ng", "Pg", "K", "J", "Tr", "P", "C", "D", "S", "O", "Є"),
-  col  = c("#FCD69C", "#F89B5C", "#6C4934", "#8A3EA4", "#33BDE9", "#80CE5C", "#83AD6A", "#00A990", "#B3E4C2", "#CA9547", "#49706F", "#E74D40")
+  col  = c("#FFF2A6", "#FFD37F", "#FFAB70", "#7FC64E", "#34B2C9", "#812B92", "#F04028", "#67A599", "#CB8C37", "#B3E1B6", "#009270", "#7FA056")
 )
 
 plot(NA, xlim = xlim, ylim = c(0,1), xaxt = "n", yaxt = "n",
      xlab = "", ylab = "", bty = "n")
 for (i in seq_len(nrow(gsa))) {
   rect(gsa$to[i], 0, gsa$from[i], 1, col = gsa$col[i], border = NA)
-  text((gsa$from[i] + gsa$to[i]) / 2, 0.5, gsa$lab[i], cex = 0.9)
+  text((gsa$from[i] + gsa$to[i]) / 2, 0.5, gsa$lab[i], cex = 0.9, xpd = NA)
 }
 box()
 
-par(mar = c(1.0, 5.2, 0.1, 5.2))
+par(mar = c(3.5, 5.2, 0.1, 5.2))
 plot(NA, xlim = xlim, ylim = c(0,1), xaxt = "n", yaxt = "n",
      xlab = "", ylab = "", bty = "n")
 

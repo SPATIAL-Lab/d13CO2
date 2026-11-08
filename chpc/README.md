@@ -1,6 +1,6 @@
 # Definitive model suite
 
-Copy the `R` and `chpc` folders into the repository without changing their structure.
+Submit from the cloned repository root. The launcher uses the submission directory by default; `WORK_DIR` can override it. Install the required R packages in your own library (`R_LIBS_USER` may be supplied through the environment). The Slurm account, partition, email, and module settings are CHPC-specific; adjust them for your cluster.
 
 Choose a folder name under `output/model_runs/` and launch the seven profiles from the repository root:
 
